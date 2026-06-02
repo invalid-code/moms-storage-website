@@ -30,7 +30,7 @@ import deliveryTruck from './assets/delivery-truck.png'
       </div>
     </aside>
 
-    <main class="bg-[#F5F5F5] flex-1 pl-[100.8px]">
+    <main class="bg-[#F5F5F5] flex-1 pl-[100.8px] min-h-[calc(100dvh-92px)]">
       <router-view />
     </main>
   </div>
