@@ -16,18 +16,18 @@ import deliveryTruck from './assets/delivery-truck.png'
 
   <div class="flex">
     <aside class="flex flex-col bg-[#363537] h-full top-23 w-[100.8px] fixed">
-      <div class="h-25 flex items-center justify-center">
+      <router-link to="/" class="h-25 flex items-center justify-center">
         <img class="w-15 h-15" :src="home" alt="sidebar home">
-      </div>
-      <div class="h-25 flex items-center justify-center">
+      </router-link>
+      <router-link to="/branches" class="h-25 flex items-center justify-center">
         <img class="w-15 h-15" :src="store" alt="sidebar branches">
-      </div>
-      <div class="h-25 flex items-center justify-center">
+      </router-link>
+      <router-link to="/stocks" class="h-25 flex items-center justify-center">
         <img class="w-15 h-15" :src="box" alt="sidebar stocks">
-      </div>
-      <div class="h-25 flex items-center justify-center">
+      </router-link>
+      <router-link to="/deliveries" class="h-25 flex items-center justify-center">
         <img class="w-15 h-15" :src="send" alt="sidebar deliveries">
-      </div>
+      </router-link>
     </aside>
 
     <main class="bg-[#F5F5F5] flex-1 pl-[100.8px] min-h-[calc(100dvh-92px)]">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import search from '../assets/search.png'
 import imgPlaceholder from '../assets/image.png'
+import BranchesDropdown from '@/components/BranchesDropdown.vue';
 </script>
 
 <template>
@@ -42,14 +43,7 @@ import imgPlaceholder from '../assets/image.png'
           </button>
         </div>
         <div class="flex">
-          <div>
-            <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center"
-              name="branches">
-              <option value="house">HOUSE</option>
-              <option value="ccmc">CCMC</option>
-              <option value="perpetual">PERPETUAL</option>
-            </select>
-          </div>
+          <BranchesDropdown />
           <div class="flex items-center px-3.5">
             <div class="w-7.5 h-7.5 bg-red-600 rounded-[50%]"></div>
             <p class="text-[23px] ml-2.75">Low</p>
