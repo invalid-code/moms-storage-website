@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const branches = ["HOUSES", "CCMC", "PERPETUAL"];
+const branches = ["HOUSE", "CCMC", "PERPETUAL"];
 </script>
 
 <template>
