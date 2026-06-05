@@ -24,7 +24,7 @@ const props = defineProps({
     <div class="text-[25px] font-bold flex justify-center items-center" :class="`bg-[#${tableColor}]`"
       v-for="key in Object.keys(content)">
       <template v-if="interactiveHeaders?.includes(key)">
-        <slot :name="`headers-${key}`"></slot>
+        <slot :name="`headers-${key }`"></slot>
       </template>
       <template v-else>{{ key }}</template>
     </div>

@@ -31,6 +31,16 @@ interface Item {
     count: number;
 }
 
+interface Branch {
+    name: string;
+}
+
+interface Delivery {
+    dateRequested: Date;
+    dateDelivered: Date;
+    delivered: boolean;
+}
+
 try {
     await client.connect()
 } catch (error) {
@@ -39,21 +49,14 @@ try {
 
 const medicineDb = client.db("medicine");
 const medicineCollection = medicineDb.collection<Item>("medicine");
+const branchCollection = medicineDb.collection<Branch>("branches");
+const deliveryCollection = medicineDb.collection<Delivery>("deliveries");
+
 
 // Routes
 app.get('/api/item', async (req: Request, res: Response) => {
     const allMedicineRecords = await medicineCollection.find({}).toArray();
     res.json(allMedicineRecords);
-});
-
-app.get('/', async (req: Request, res: Response) => {
-    res.json("hello");
-});
-
-app.post('/api/item', async (req: Request<{}, {}, Item>, res: Response) => {
-    const newItem = req.body;
-    const insertedItemRes = await medicineCollection.insertOne(newItem);
-    res.json(insertedItemRes);
 });
 
 app.put('/api/item/:id', async (req: Request, res: Response) => {
@@ -90,6 +93,26 @@ app.put('/api/item/:id', async (req: Request, res: Response) => {
         console.error("Error updating item:", error);
         return res.status(500).json({ error: "Internal server error" });
     }
+});
+
+app.get('/api/branch', async (req: Request, res: Response) => {
+    const allBranchRecords = await branchCollection.find({}).toArray();
+    res.json(allBranchRecords);
+});
+
+app.get('/api/delivery', async (req: Request, res: Response) => {
+    const allDeliveryRecords = await deliveryCollection.find({}).toArray();
+    res.json(allDeliveryRecords);
+});
+
+app.post('/api/delivery', async (req: Request, res: Response) => {
+    const allDeliveryRecords = await deliveryCollection.find({}).toArray();
+    res.json(allDeliveryRecords);
+});
+
+app.put('/api/delivery/:id', async (req: Request, res: Response) => {
+    const allDeliveryRecords = await deliveryCollection.find({}).toArray();
+    res.json(allDeliveryRecords);
 });
 
 // Start listening
