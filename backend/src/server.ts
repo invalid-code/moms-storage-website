@@ -129,6 +129,87 @@ app.get('/api/branch', async (req: Request, res: Response) => {
   res.json(allBranchRecords);
 });
 
+app.get('/api/branch/lowest-stock', async (req: Request, res: Response) => {
+  try {
+    const data = await branchCollection.aggregate([
+      { $unwind: "$stocks" },
+      {
+        $lookup: {
+          from: "medicine",
+          localField: "stocks.stock_id",
+          foreignField: "_id",
+          as: "medicine_info"
+        }
+      },
+      { $unwind: "$medicine_info" },
+      {
+        $project: {
+          _id: 0,
+          stock_name: "$medicine_info.name",
+          branch: "$name",
+          stock_onhold_amount: "$stocks.stock_onhold_amount",
+          percentage: {
+            $cond: {
+              if: { $eq: ["$medicine_info.count", 0] },
+              then: 0,
+              else: {
+                $multiply: [
+                  { $divide: ["$stocks.stock_onhold_amount", "$medicine_info.count"] },
+                  100
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          percentage: { $lt: 30 }
+        }
+      },
+      {
+        $sort: {
+          stock_name: 1,
+          stock_onhold_amount: 1
+        }
+      },
+      {
+        $group: {
+          _id: "$stock_name",
+          lowestBranch: { $first: "$branch" },
+          lowestPercentage: { $first: "$percentage" }
+        }
+      },
+      {
+        $sort: {
+          lowestPercentage: 1
+        }
+      },
+      {
+        $limit: 3
+      },
+      {
+        $project: {
+          _id: 0,
+          "stock-name": "$_id",
+          "branch": "$lowestBranch",
+          "stock-percentage": {
+            $concat: [{ $toString: { $round: ["$lowestPercentage", 2] } }, "%"]
+          }
+        }
+      }
+    ]).toArray();
+
+    res.status(200).json({ data });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
+});
+
 app.get('/api/delivery', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;

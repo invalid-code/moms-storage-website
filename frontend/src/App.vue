@@ -5,6 +5,9 @@ import send from './assets/send.png'
 import store from './assets/store.png'
 import bell from './assets/bell.png'
 import deliveryTruck from './assets/delivery-truck.png'
+import { useRoute } from 'vue-router'
+
+const route = useRoute();
 </script>
 
 <template>
@@ -16,16 +19,16 @@ import deliveryTruck from './assets/delivery-truck.png'
 
   <div class="flex">
     <aside class="flex flex-col bg-[#363537] h-full top-23 w-[100.8px] fixed">
-      <router-link to="/" class="h-25 flex items-center justify-center">
+      <router-link to="/" class="h-25 flex items-center justify-center" :class="{'bg-[#80808080]': route.name === 'home'}">
         <img class="w-15 h-15" :src="home" alt="sidebar home">
       </router-link>
-      <router-link to="/branches" class="h-25 flex items-center justify-center">
+      <router-link to="/branches" class="h-25 flex items-center justify-center" :class="{'bg-[#80808080]': route.name === 'branches'}">
         <img class="w-15 h-15" :src="store" alt="sidebar branches">
       </router-link>
-      <router-link to="/stocks" class="h-25 flex items-center justify-center">
+      <router-link to="/stocks" class="h-25 flex items-center justify-center" :class="{'bg-[#80808080]': route.name === 'stocks'}">
         <img class="w-15 h-15" :src="box" alt="sidebar stocks">
       </router-link>
-      <router-link to="/deliveries" class="h-25 flex items-center justify-center">
+      <router-link to="/deliveries" class="h-25 flex items-center justify-center" :class="{'bg-[#80808080]': route.name === 'deliveries'}">
         <img class="w-15 h-15" :src="send" alt="sidebar deliveries">
       </router-link>
     </aside>
