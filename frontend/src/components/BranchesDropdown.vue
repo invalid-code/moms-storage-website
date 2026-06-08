@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 const branches = ref(null);
 const error = ref("");
 const isLoading = ref(true);
+const emit = defineEmits(["curSelected"]);
 
 const getAllBranches = async () => {
   try {
@@ -25,6 +26,11 @@ const getAllBranches = async () => {
   }
 }
 
+const changeSelected = (event: Event) => {
+    const selectedVal = event.target.value;
+    emit("curSelected", selectedVal);
+}
+
 onMounted(() => {
   getAllBranches();
 });
@@ -32,8 +38,10 @@ onMounted(() => {
 
 <template>
   <div>
-    <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center" name="branches">
-      <option v-for="branch in branches" :value="branch.name">{{ `${branch.name.toUpperCase()}` }}</option>
+    <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center" name="branches" @change="changeSelected">
+      <template v-if="!isLoading">
+        <option v-for="branch in branches" :value="branch._id">{{ `${branch.name.toUpperCase()}` }}</option>
+      </template>
     </select>
   </div>
 </template>

@@ -200,7 +200,190 @@ app.get('/api/branch/lowest-stock', async (req: Request, res: Response) => {
       }
     ]).toArray();
 
-    res.status(200).json({ data });
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
+});
+
+app.get('/api/branch/:id', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const { id } = req.params;
+
+    const skip = (page - 1) * limit;
+
+    const pipeline = [
+      {
+        $match: {
+          _id: new ObjectId(id as string)
+        }
+      },
+      { $unwind: "$stocks" },
+      {
+        $lookup: {
+          from: "medicine",
+          localField: "stocks.stock_id",
+          foreignField: "_id",
+          as: "medicine_info"
+        }
+      },
+      { $unwind: "$medicine_info" },
+      {
+        $project: {
+          _id: 0,
+          stock_name: "$medicine_info.name",
+          stock_onhold_amount: "$stocks.stock_onhold_amount",
+        }
+      },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 0,
+                "stock-name": "$stock_name",
+                stock_onhold_amount: "$stock_onhold_amount",
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    const aggregationResult = await branchCollection.aggregate(pipeline).toArray();
+    const facetResult = aggregationResult[0];
+    const data = facetResult?.data || [];
+    const totalItems = facetResult?.metadata[0]?.total || 0;
+
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
+});
+
+app.get('/api/branch/:id/lowest-stock', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const { id } = req.params;
+
+    const skip = (page - 1) * limit;
+
+    const pipeline = [
+      {
+        $match: {
+          _id: new ObjectId(id as string)
+        }
+      },
+      { $unwind: "$stocks" },
+      {
+        $lookup: {
+          from: "medicine",
+          localField: "stocks.stock_id",
+          foreignField: "_id",
+          as: "medicine_info"
+        }
+      },
+      { $unwind: "$medicine_info" },
+      {
+        $project: {
+          _id: 0,
+          stock_name: "$medicine_info.name",
+          stock_onhold_amount: "$stocks.stock_onhold_amount",
+          percentage: {
+            $cond: {
+              if: { $eq: ["$medicine_info.count", 0] },
+              then: 0,
+              else: {
+                $multiply: [
+                  { $divide: ["$stocks.stock_onhold_amount", "$medicine_info.count"] },
+                  100
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          percentage: { $lt: 30 }
+        }
+      },
+      {
+        $sort: {
+          percentage: 1
+        }
+      },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 0,
+                "stock-name": "$stock_name",
+                stock_onhold_amount: "$stock_onhold_amount",
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    const aggregationResult = await branchCollection.aggregate(pipeline).toArray();
+    const facetResult = aggregationResult[0];
+    const data = facetResult?.data || [];
+    const totalItems = facetResult?.metadata[0]?.total || 0;
+
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
   } catch (err) {
     if (err instanceof Error) {
       res.status(500).json({ success: false, message: err.message });
@@ -266,12 +449,69 @@ app.get('/api/delivery', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/delivery', async (req: Request, res: Response) => {
-  const allDeliveryRecords = await deliveryCollection.find({}).toArray();
-  res.json(allDeliveryRecords);
+app.get('/api/delivery/:branchId', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const { branchId } = req.params;
+
+    const skip = (page - 1) * limit;
+
+    const branchObjectId = new ObjectId(branchId);
+
+    const filter = { branch: branchObjectId };
+
+    const pipeline = [
+      { $match: filter },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      }
+    ];
+
+    const [data, totalItems] = await Promise.all([
+      deliveryCollection.aggregate(pipeline).toArray(),
+      deliveryCollection.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
 });
 
-app.put('/api/delivery/:id', async (req: Request, res: Response) => {
+app.post('/api/delivery', async (req: Request, res: Response) => {
   const allDeliveryRecords = await deliveryCollection.find({}).toArray();
   res.json(allDeliveryRecords);
 });
