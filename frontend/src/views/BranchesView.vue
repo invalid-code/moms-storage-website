@@ -80,10 +80,11 @@ const getBranchDeliveries = async (selectedBranchId: string, page = 1, limit = 1
 
     const result = await response.json();
     deliveries.value = {
-      "Delivery Status": result.data.map((delivery) => delivery.delivered),
-      "Date Requested": result.data.map((delivery) => delivery.dateRequested),
-      "Date Received": result.data.map((delivery) => delivery.dateDelivered)
-    }
+      "Delivery Status": result.data.map((delivery) => delivery.delivered ? "Delivered" : "Pending"),
+      "Date Requested": result.data.map((delivery) => new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
+      "Date Received": result.data.map((delivery) => new Date(delivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }))
+    };
+    console.log(result);
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message;
@@ -115,10 +116,11 @@ onMounted(() => {
         <StaticTable title="Low Stocks" :content="lowestStocks" class="grid-cols-2" table-color="#EF2D56" />
       </template>
       <template v-if="!isStocksLoading">
-        <StaticTable title="Stocks" :content="stocks" class="grid-cols-2 grid-rows-10 row-span-2" table-color="#0CCE6B" />
+        <StaticTable title="Stocks" :content="stocks" class="grid-cols-2 grid-rows-10 row-span-2"
+          table-color="#0CCE6B" />
       </template>
       <template v-if="!isDeliveryLoading">
-        <StaticTable title="Deliverables" :content="deliveries" class="grid-cols-3" table-color="#ED7D3A" />
+        <StaticTable title="Deliveries" :content="deliveries" class="grid-cols-3" table-color="#ED7D3A" />
       </template>
     </div>
   </div>
