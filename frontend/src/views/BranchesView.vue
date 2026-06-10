@@ -110,20 +110,21 @@ onMounted(() => {
 
 <template>
   <div class="py-18.5 px-24 h-full">
-    <BranchesDropdown class="mb-7 flex justify-end" @cur-selected="branchesDropdownEmitHandler" :default-value="curSelectedBranch" />
-    <div class="grid grid-cols-2 gap-x-10.75 gap-y-10.5 h-full">
-      <template v-if="!isLowStockLoading">
-        <StaticTable title="Low Stocks" :content="lowestStocks" class="grid-cols-2" table-color="#EF2D56" :maximum="4"/>
-      </template>
-      <template v-if="!isStocksLoading">
-        <StaticTable title="Stocks" :content="stocks" class="grid-cols-2 grid-rows-11 row-span-2" :maximum="10"
-          table-color="#0CCE6B" />
-      </template>
-      <template v-if="!isDeliveryLoading">
-        <StaticTable title="Deliveries" :content="deliveries" class="grid-cols-3" table-color="#ED7D3A" :maximum="4" />
-      </template>
-    </div>
+  <BranchesDropdown class="mb-7 flex justify-end" @cur-selected="branchesDropdownEmitHandler" :default-value="curSelectedBranch" />
+  <div class="grid grid-cols-2 gap-x-10.75 gap-y-10.5 h-full items-start"> <template v-if="!isLowStockLoading">
+      <StaticTable title="Low Stocks" :content="lowestStocks" class="grid-cols-2" table-color="#EF2D56" :maximum="4"/>
+    </template>
+    
+    <template v-if="!isStocksLoading">
+      <StaticTable title="Stocks" :content="stocks" class="grid-cols-2 row-span-2" :maximum="10" table-color="#0CCE6B" />
+    </template>
+    
+    <template v-if="!isDeliveryLoading">
+      <StaticTable title="Deliveries" :content="deliveries" class="grid-cols-3" table-color="#ED7D3A" :maximum="4" />
+    </template>
+    
   </div>
+</div>
 </template>
 
 <style scoped></style>
