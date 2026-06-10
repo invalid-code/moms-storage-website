@@ -57,16 +57,31 @@ app.get('/api/item', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-
     const skip = (page - 1) * limit;
 
-    const [data, totalItems] = await Promise.all([
-      medicineCollection.find()
-        .skip(skip)
-        .limit(limit)
-        .toArray(),
-      medicineCollection.countDocuments()
-    ]);
+    const stockName = req.query.stockName as string;
+
+    const matchStage: any = {};
+
+    if (stockName) {
+      matchStage.name = { $regex: stockName, $options: 'i' };
+    }
+
+    const aggregationResult = await medicineCollection.aggregate([
+      { $match: matchStage },
+      {
+        $facet: {
+          metadata: [{ $count: 'totalItems' }],
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ]
+        }
+      }
+    ]).toArray();
+
+    const data = aggregationResult[0]?.data || [];
+    const totalItems = aggregationResult[0]?.metadata[0]?.totalItems || 0;
 
     const totalPages = Math.ceil(totalItems / limit);
     const hasNextPage = page < totalPages;
@@ -93,6 +108,7 @@ app.get('/api/item', async (req: Request, res: Response) => {
     }
   }
 });
+
 
 app.put('/api/item/:id', async (req: Request, res: Response) => {
   try {
@@ -219,9 +235,26 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const { id } = req.params;
 
+    const stockName = req.query.stockName as string;
+    const stockQuantity = req.query.stockQuantity ? parseFloat(req.query.stockQuantity as string) : undefined;
+
     const skip = (page - 1) * limit;
 
-    const pipeline = [
+    const filterMatch: any = {};
+    if (stockName) {
+      filterMatch["stock_name"] = { $regex: stockName, $options: 'i' };
+    }
+
+    const percentageMatch: any[] = [];
+    if (stockQuantity !== undefined) {
+      percentageMatch.push({
+        $match: {
+          percentage: { $lte: stockQuantity }
+        }
+      });
+    }
+
+    const pipeline: any[] = [
       {
         $match: {
           _id: new ObjectId(id as string)
@@ -242,8 +275,22 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
           _id: 0,
           stock_name: "$medicine_info.name",
           stock_onhold_amount: "$stocks.stock_onhold_amount",
+          percentage: {
+            $cond: {
+              if: { $gt: ["$medicine_info.count", 0] },
+              then: {
+                $multiply: [
+                  { $divide: ["$stocks.stock_onhold_amount", "$medicine_info.count"] },
+                  100
+                ]
+              },
+              else: 0
+            }
+          }
         }
       },
+      ...(Object.keys(filterMatch).length > 0 ? [{ $match: filterMatch }] : []),
+      ...percentageMatch,
       {
         $facet: {
           metadata: [{ $count: "total" }],
@@ -255,6 +302,7 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
                 _id: 0,
                 "stock-name": "$stock_name",
                 stock_onhold_amount: "$stock_onhold_amount",
+                percentage: { $round: ["$percentage", 2] }
               }
             }
           ]

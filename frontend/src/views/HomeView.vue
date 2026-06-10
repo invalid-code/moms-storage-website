@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import search from '../assets/search.png'
+import search from '../assets/search.png';
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
 import InfoCard from '@/components/InfoCard.vue';
 import StockCard from '@/components/StockCard.vue';
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue';
 
 const items = ref({});
 const deliveries = ref({});
@@ -13,6 +13,15 @@ const isItemLoading = ref(true);
 const isDeliveryLoading = ref(true);
 const isBranchLoading = ref(true);
 const curPage = ref(1);
+const stockSearch = ref('');
+const curSelectedBranch = ref("");
+const selectedStockQuantity = ref<number | null>(null);
+const stockQuantityColor = ref("bg-gray-700");
+const stockQuantityText = ref("All");
+
+const branchesDropdownEmitHandler = (payload: string) => {
+  curSelectedBranch.value = payload;
+};
 
 const getCurPageItems = async (page = 1, limit = 10) => {
   try {
@@ -60,7 +69,7 @@ const get3RecentDeliveries = async (page = 1, limit = 10) => {
   }
 };
 
-const get3LowestStockPerBranch = async (page = 1, limit = 10) => {
+const get3LowestStockPerBranch = async () => {
   try {
     isBranchLoading.value = true;
     error.value = "";
@@ -83,6 +92,65 @@ const get3LowestStockPerBranch = async (page = 1, limit = 10) => {
   }
 };
 
+const submitFilters = async () => {
+  curPage.value = 1;
+  try {
+    isItemLoading.value = true;
+    if (curSelectedBranch.value === "") {
+      const response = await fetch(`http://localhost:5000/api/item?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      items.value = result;
+    } else {
+      console.log("hello");
+      let url = `http://localhost:5000/api/branch/${curSelectedBranch.value}?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`;
+      if (selectedStockQuantity.value !== null) {
+        url += `&stockQuantity=${selectedStockQuantity.value}`;
+      }
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      result.data = result.data.map((stock) => ({ "name": stock["stock-name"], "count": stock.stock_onhold_amount }));
+      items.value = result;
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = `An unexpected error occurred: ${err}`;
+    }
+  } finally {
+    isItemLoading.value = false;
+  }
+};
+
+const selectStockQuantity = () => {
+  if (selectedStockQuantity.value === null) {
+    selectedStockQuantity.value = 30;
+    stockQuantityColor.value = "bg-red-600";
+    stockQuantityText.value = "Low";
+  } else if (selectedStockQuantity.value === 90) {
+    selectedStockQuantity.value = null;
+    stockQuantityColor.value = "bg-gray-700";
+    stockQuantityText.value = "All";
+  } else {
+    selectedStockQuantity.value += 30;
+    if (selectedStockQuantity.value === 60) {
+      stockQuantityColor.value = "bg-yellow-400";
+      stockQuantityText.value = "Half";
+    } else {
+      stockQuantityColor.value = "bg-green-700";
+      stockQuantityText.value = "Stocked";
+    }
+  }
+};
+
 onMounted(() => {
   getCurPageItems(curPage.value, 8);
   get3RecentDeliveries(1, 3);
@@ -90,9 +158,6 @@ onMounted(() => {
 });
 watch(curPage, (newPage) => {
   getCurPageItems(newPage, 8);
-});
-watch(branchStocks, (newBranchStocks) => {
-  console.log(branchStocks.value);
 });
 </script>
 
@@ -114,22 +179,25 @@ watch(branchStocks, (newBranchStocks) => {
         <div class="bg-[#363537] px-3.25 py-1.5 rounded-[15px] flex">
           <input
             class="placeholder:text-white placeholder:text-[23px] bg-[#5B5A5E80] rounded-[10px] pl-3 caret-white text-white mr-1.5 h-full w-[320px]"
-            type="text" placeholder="Search stock...">
+            type="text" placeholder="Search stock..." v-model="stockSearch">
           <button class="shrink-0 bg-[#5B5A5E80] rounded-[10px] px-2 py-1">
             <img class="w-9.5 h-9.5" :src="search" alt="stock search button">
           </button>
         </div>
         <div class="flex">
-          <BranchesDropdown />
-          <div class="flex items-center px-3.5">
-            <div class="w-7.5 h-7.5 bg-red-600 rounded-[50%]"></div>
-            <p class="text-[23px] ml-2.75">Low</p>
+          <BranchesDropdown @cur-selected="branchesDropdownEmitHandler" />
+          <div v-if="curSelectedBranch === ''" class="flex items-center px-3.5">
+            <div class="w-7.5 h-7.5 rounded-[50%] bg-gray-600"></div>
+            <p class="text-[23px] ml-2.75">All</p>
           </div>
-          <button class="bg-[#DCED31] px-3.5 py-3.75 rounded-[20px] text-[23px]">Apply</button>
+          <button v-else class="flex items-center px-3.5" @click="selectStockQuantity">
+            <div class="w-7.5 h-7.5 rounded-[50%]" :class="stockQuantityColor"></div>
+            <p class="text-[23px] ml-2.75">{{ stockQuantityText }}</p>
+          </button>
+          <button @click="submitFilters" class="bg-[#DCED31] px-3.5 py-3.75 rounded-[20px] text-[23px]">Apply</button>
         </div>
       </div>
-      <div
-        class="grid grid-cols-[200px_200px_200px_200px] mb-6.25 gap-x-9.25 gap-y-15 justify-center h-139.25 grid-rows-2">
+      <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
         <template v-if="!isItemLoading">
           <StockCard v-for="item in items.data" :stock-name="item.name" />
         </template>
@@ -152,7 +220,8 @@ watch(branchStocks, (newBranchStocks) => {
       <InfoCard title="Delivery Status" table-color="bg-[#ED7D3A]">
         <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
           <div>
-            <h1 class="text-[30px] whitespace-nowrap px-7.25 pt-[16.66px]">{{ delivery.branchDetails.name.toUpperCase() }}</h1>
+            <h1 class="text-[30px] whitespace-nowrap px-7.25 pt-[16.66px]">{{ delivery.branchDetails.name.toUpperCase()
+              }}</h1>
           </div>
           <div class="text-[20px] px-7.25">
             <template v-if="delivery.delivered">Delivered</template>

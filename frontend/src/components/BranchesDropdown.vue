@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+
+const props = defineProps({
+  "defaultValue": {
+    type: String,
+    required: false
+  },
+});
 
 const branches = ref(null);
 const error = ref("");
 const isLoading = ref(true);
 const emit = defineEmits(["curSelected"]);
+const curSelected = ref(props.defaultValue === undefined ? "" : props.defaultValue);
 
 const getAllBranches = async () => {
   try {
@@ -24,12 +32,9 @@ const getAllBranches = async () => {
   } finally {
     isLoading.value = false;
   }
-}
+};
 
-const changeSelected = (event: Event) => {
-    const selectedVal = event.target.value;
-    emit("curSelected", selectedVal);
-}
+watch(curSelected, (newCurSelected) => emit("curSelected", newCurSelected));
 
 onMounted(() => {
   getAllBranches();
@@ -38,9 +43,12 @@ onMounted(() => {
 
 <template>
   <div>
-    <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center" name="branches" @change="changeSelected">
+    <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center"
+      v-model="curSelected">
+      <option value="">Choose a branch</option>
       <template v-if="!isLoading">
-        <option v-for="branch in branches" :value="branch._id">{{ `${branch.name.toUpperCase()}` }}</option>
+        <option v-for="branch in branches" :key="branch._id" :value="branch._id">{{ `${branch.name.toUpperCase()}` }}
+        </option>
       </template>
     </select>
   </div>

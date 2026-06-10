@@ -110,7 +110,7 @@ onMounted(() => {
 
 <template>
   <div class="py-18.5 px-24 h-full">
-    <BranchesDropdown class="mb-7" @cur-selected="branchesDropdownEmitHandler" />
+    <BranchesDropdown class="mb-7" @cur-selected="branchesDropdownEmitHandler" :default-value="curSelectedBranch" />
     <div class="grid grid-cols-2 gap-x-10.75 gap-y-10.5 h-full">
       <template v-if="!isLowStockLoading">
         <StaticTable title="Low Stocks" :content="lowestStocks" class="grid-cols-2" table-color="#EF2D56" />
