@@ -2,7 +2,7 @@
 import InteractiveTable from '@/components/InteractiveTable.vue';
 import { onMounted, ref } from 'vue';
 
-const receiveDeliveries = [0, 1];
+const receiveDeliveries = ref([]);
 
 const isDeliveriesLoading = ref(true);
 const error = ref("");
@@ -24,6 +24,9 @@ const getDeliveries = async (page = 1, limit = 10) => {
       "Branch": result.data.map((delivery) => delivery.branchDetails.name),
       "Date Receive": result.data.map((delivery) => delivery.dateDelivered),
     };
+    receiveDeliveries.value = result.data.map((delivery, i) => { 
+      if (delivery.delivered) return i 
+    }).toArray();
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message;
@@ -47,7 +50,9 @@ onMounted(() => {
         class="grid-cols-3 grid-rows-11">
         <template v-for="(deliveryReceived, i) in deliveries['Date Receive']" #[`row-${i}`]>
           <button v-if="receiveDeliveries.includes(i)">Receive</button>
-          <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) }}</p>
+          <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {
+            year: "numeric", month: "long", day:
+            "numeric" }) }}</p>
         </template>
       </InteractiveTable>
     </template>
