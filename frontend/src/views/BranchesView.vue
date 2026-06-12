@@ -84,7 +84,6 @@ const getBranchDeliveries = async (selectedBranchId: string, page = 1, limit = 1
       "Date Requested": result.data.map((delivery) => new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
       "Date Received": result.data.map((delivery) => new Date(delivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }))
     };
-    console.log(result);
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message;

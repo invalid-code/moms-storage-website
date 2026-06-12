@@ -109,6 +109,33 @@ app.get('/api/item', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/item/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
+
+    const data = await medicineCollection.findOne({ _id: new ObjectId(id) });
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
+});
+
 
 app.put('/api/item/:id', async (req: Request, res: Response) => {
   try {
@@ -330,6 +357,65 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
         hasNextPage,
         hasPrevPage
       }
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
+  }
+});
+
+app.get('/api/branch/:branchId/stock/:stockId', async (req: Request, res: Response) => {
+  try {
+    const { branchId, stockId } = req.params;
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          _id: new ObjectId(branchId as string)
+        }
+      },
+      { $unwind: "$stocks" },
+      {
+        $match: {
+          "stocks.stock_id": new ObjectId(stockId as string)
+        }
+      },
+      {
+        $lookup: {
+          from: "medicine",
+          localField: "stocks.stock_id",
+          foreignField: "_id",
+          as: "medicine_info"
+        }
+      },
+      { $unwind: "$medicine_info" },
+      {
+        $project: {
+          _id: 0,
+          stock_name: "$medicine_info.name",
+          stock_id: "$stocks.stock_id",
+          stock_onhold_amount: "$stocks.stock_onhold_amount"
+        }
+      }
+    ];
+
+    const result = await branchCollection.aggregate(pipeline).toArray();
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch or specific stock not found."
+      });
+    }
+
+    const data = result[0];
+
+    res.status(200).json({
+      success: true,
+      data,
     });
   } catch (err) {
     if (err instanceof Error) {

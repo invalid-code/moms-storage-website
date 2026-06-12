@@ -7,14 +7,16 @@ const interactiveColumns = ["Branch"];
 const branches = ref(null);
 const isBranchesLoading = ref(true);
 const isBranchStocksLoading = ref(true);
+const stocksRes = ref({});
 const stocks = ref({});
 const error = ref("");
-const curSelectedBranch = ref(""); // todo: when first load get the default selected value
+const curSelectedBranch = ref("");
+const curSelectedBranchRow = ref(new Array(10).fill(null));
 
 const getAllBranches = async () => {
   try {
     isBranchesLoading.value = true;
-    const response = await fetch(`http://localhost:5000/api/branch`);
+    const response = await fetch("http://localhost:5000/api/branch");
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -49,6 +51,7 @@ const getBranchStocks = async (selectedBranchId = "", page = 1, limit = 10) => {
     }
 
     const result = await response.json();
+    stocksRes.value = result;
     if (selectedBranchId === "") {
       stocks.value = {
         "Stock Name": result.data.map((stock) => stock.name),
@@ -73,8 +76,47 @@ const getBranchStocks = async (selectedBranchId = "", page = 1, limit = 10) => {
   }
 };
 
+const getRowBranchStocks = async (row: number) => {
+  try {
+    isBranchStocksLoading.value = true;
+    error.value = "";
+    if (curSelectedBranchRow.value[row] === null) {
+      const response = await fetch(`http://localhost:5000/api/item/${stocksRes.value.data[row]._id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      stocks.value["Stock Name"][row] = result.data.name;
+      stocks.value["Quantity"][row] = result.data.count;
+    }
+    else {
+      const response = await fetch(`http://localhost:5000/api/branch/${curSelectedBranchRow.value[row]}/stock/${stocksRes.value.data[row]._id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      stocks.value["Stock Name"][row] = result.data.stock_name;
+      stocks.value["Quantity"][row] = result.data.stock_onhold_amount;
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = `An unexpected error occurred: ${err}`;
+    }
+  } finally {
+    isBranchStocksLoading.value = false;
+  }
+};
+
 watch(curSelectedBranch, (newCurSelectedBranch) => {
   getBranchStocks(newCurSelectedBranch, 1, 10);
+
+  if (newCurSelectedBranch !== "") {
+    curSelectedBranchRow.value = curSelectedBranchRow.value.map((_) => newCurSelectedBranch);
+  } else {
+    curSelectedBranchRow.value = new Array(10).fill(null);
+  }
 });
 
 onMounted(() => {
@@ -97,16 +139,11 @@ onMounted(() => {
           </select>
         </template>
         <template v-for="i in Array.from({ length: 10 }, (_, i) => 0 + i)" #[`row-${i}`]>
-          <select>
+          <select v-model="curSelectedBranchRow[i]" @change="(() => getRowBranchStocks(i))">
+            <option :value="null">Choose A Branch</option>
             <template v-if="!isBranchesLoading">
-              <template v-for="branch in branches">
-                <template v-if="branch._id === curSelectedBranch">
-                  <option selected :value="branch._id">{{ branch.name.toUpperCase() }}</option>
-                </template>
-                <template v-else>
-                  <option :value="branch._id">{{ branch.name.toUpperCase() }}</option>
-                </template>
-              </template>
+              <option v-for="branch in branches" :value="branch._id">{{
+                branch.name.toUpperCase() }}</option>
             </template>
           </select>
         </template>
