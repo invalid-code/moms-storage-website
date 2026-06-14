@@ -129,7 +129,7 @@ onMounted(() => {
   <div class="px-29.5 py-16.75 h-full">
     <template v-if="!isBranchStocksLoading">
       <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns" :content="stocks"
-        class="grid-cols-3 grid-rows-11" :interactive-headers="interactiveColumns">
+        class="grid-cols-3 grid-rows-11" :interactive-headers="interactiveColumns" :-row-amt="10">
         <template v-for="header in interactiveColumns" #[`headers-${header}`] @change="mainBranchesDropdownEmitHandler">
           <select v-model="curSelectedBranch">
             <option value="">Choose a Branch</option>

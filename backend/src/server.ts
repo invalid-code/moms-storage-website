@@ -38,6 +38,8 @@ interface Delivery {
   dateRequested: Date;
   dateDelivered: Date;
   delivered: boolean;
+  requestedStocks: string[];
+  branch: string
 }
 
 try {
@@ -646,8 +648,23 @@ app.get('/api/delivery/:branchId', async (req: Request, res: Response) => {
 });
 
 app.post('/api/delivery', async (req: Request, res: Response) => {
-  const allDeliveryRecords = await deliveryCollection.find({}).toArray();
-  res.json(allDeliveryRecords);
+  const { branchId, stocksRequested } = req.body;
+
+  const newDelivery = {
+    dateRequested: new Date(),
+    delivered: false,
+    stocksRequested: stocksRequested.map((stockRequested) => new ObjectId(stockRequested)),
+    branch: new ObjectId(branchId)
+  };
+  let status = await deliveryCollection.insertOne(newDelivery);
+  if (!status.acknowledged) {
+    res.status(500).json({
+      message: "Delivery couldn't be ordered"
+    });
+  }
+  res.status(201).json({
+    message: "New delivery was ordered",
+  });
 });
 
 app.listen(PORT, () => {

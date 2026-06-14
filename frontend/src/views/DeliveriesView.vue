@@ -47,7 +47,7 @@ onMounted(() => {
   <div class="px-29.5 py-16.75 h-full">
     <template v-if="!isDeliveriesLoading">
       <InteractiveTable table-color="0CCE6B" :content="deliveries" :interactive-columns="['Date Receive']"
-        class="grid-cols-3 grid-rows-11">
+        class="grid-cols-3 grid-rows-11" :-row-amt="10">
         <template v-for="(deliveryReceived, i) in deliveries['Date Receive']" #[`row-${i}`]>
           <button v-if="receiveDeliveries.includes(i)">Receive</button>
           <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {

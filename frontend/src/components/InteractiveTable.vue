@@ -12,6 +12,10 @@ const props = defineProps({
     type: Array,
     required: true
   },
+  "RowAmt": {
+    type: Number,
+    required: true
+  },
   "interactiveHeaders": {
     type: Array,
     required: false
@@ -66,9 +70,9 @@ const props = defineProps({
         </template>
       </template>
     </template>
-    <template v-if="content[Object.keys(content)[0]].length < 10">
+    <template v-if="content[Object.keys(content)[0]].length < RowAmt">
       <template
-        v-for="i in Array.from({ length: 10 - content[Object.keys(content)[0]].length }, (_, i) => content[Object.keys(content)[0]].length + i)">
+        v-for="i in Array.from({ length: RowAmt - content[Object.keys(content)[0]].length }, (_, i) => content[Object.keys(content)[0]].length + i)">
         <template v-for="_ in Object.keys(content)">
           <template v-if="i % 2 == 0">
             <div class="bg-[#A3A1A52E] text-[25px]">&nbsp;</div>
