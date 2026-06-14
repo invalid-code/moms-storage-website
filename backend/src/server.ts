@@ -20,7 +20,7 @@ const client = new MongoClient(uri, {
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT'],
+  methods: ['GET', 'POST', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -135,37 +135,6 @@ app.get('/api/item/:id', async (req: Request, res: Response) => {
     } else {
       res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
     }
-  }
-});
-
-
-app.put('/api/item/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: "Invalid or missing ID parameter" });
-    }
-    const { name, count }: Item = req.body;
-
-    if (!name || typeof count !== 'number') {
-      return res.status(400).json({ error: "Missing or invalid fields. 'name' and 'count' are required." });
-    }
-
-    const updatedItem = await medicineCollection.findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: { name, count } },
-      { returnDocument: 'after' }
-    );
-
-    if (!updatedItem) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
-    return res.json(updatedItem);
-
-  } catch (error) {
-    console.error("Error updating item:", error);
-    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -659,11 +628,39 @@ app.post('/api/delivery', async (req: Request, res: Response) => {
   let status = await deliveryCollection.insertOne(newDelivery);
   if (!status.acknowledged) {
     res.status(500).json({
+      success: false,
       message: "Delivery couldn't be ordered"
     });
   }
   res.status(201).json({
+    success: true,
     message: "New delivery was ordered",
+  });
+});
+
+app.patch('/api/delivery/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid ID format' });
+  }
+
+  const updatedDelivery = await deliveryCollection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: req.body },
+    { returnDocument: 'after' }
+  );
+
+  if (!updatedDelivery) {
+    return res.status(404).json({
+      success: false,
+      message: "Delivery not found"
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: updatedDelivery
   });
 });
 

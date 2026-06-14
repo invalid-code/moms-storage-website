@@ -7,6 +7,7 @@ const receiveDeliveries = ref([]);
 const isDeliveriesLoading = ref(true);
 const error = ref("");
 const deliveries = ref({});
+const deliveryIds = ref([]);
 
 const getDeliveries = async (page = 1, limit = 10) => {
   try {
@@ -19,14 +20,47 @@ const getDeliveries = async (page = 1, limit = 10) => {
     }
 
     const result = await response.json();
+    deliveryIds.value = result.data.map((delivery) => delivery._id);
     deliveries.value = {
       "Date Requested": result.data.map((delivery) => new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
       "Branch": result.data.map((delivery) => delivery.branchDetails.name),
       "Date Receive": result.data.map((delivery) => delivery.dateDelivered),
     };
-    receiveDeliveries.value = result.data.map((delivery, i) => { 
-      if (delivery.delivered) return i 
-    }).toArray();
+    receiveDeliveries.value = result.data.map((delivery, i) => !delivery.delivered ? i : null);
+  } catch (err) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = `An unexpected error occurred: ${err}`;
+    }
+  } finally {
+    isDeliveriesLoading.value = false;
+  }
+};
+
+const receiveDelivery = async (id: string, deliveryI: number) => {
+  try {
+    isDeliveriesLoading.value = true;
+    error.value = "";
+
+    const data = {
+      delivered: true,
+      dateDelivered: new Date(),
+    }
+
+    const response = await fetch(`http://localhost:5000/api/delivery/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+    deliveries.value["Date Receive"][deliveryI] = result.data.dateDelivered;
+    receiveDeliveries.value = receiveDeliveries.value.filter(receiveDelivery => receiveDelivery !== deliveryI);
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message;
@@ -49,10 +83,11 @@ onMounted(() => {
       <InteractiveTable table-color="0CCE6B" :content="deliveries" :interactive-columns="['Date Receive']"
         class="grid-cols-3 grid-rows-11" :-row-amt="10">
         <template v-for="(deliveryReceived, i) in deliveries['Date Receive']" #[`row-${i}`]>
-          <button v-if="receiveDeliveries.includes(i)">Receive</button>
+          <button v-if="receiveDeliveries.includes(i)" @click="receiveDelivery(deliveryIds[i], i)">Receive</button>
           <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {
             year: "numeric", month: "long", day:
-            "numeric" }) }}</p>
+              "numeric"
+          }) }}</p>
         </template>
       </InteractiveTable>
     </template>
