@@ -132,7 +132,7 @@ const getRowBranchStocks = async (row: number) => {
 };
 
 const handle = (_: string) => {
-  nextPageI.value += 1
+  nextPageI.value += 1;
 };
 
 watch(nextPageI, async (newNextPageI) => {
