@@ -34,7 +34,7 @@ const colSpanClass = computed(() => {
 
 <template>
   <div class="grid rounded-[20px] overflow-hidden">
-    <div class="flex justify-center font-bold text-[20px] items-center" :class="[colSpanClass]"
+    <div class="flex justify-center font-bold text-[20px] items-center" :class="colSpanClass"
       :style="{ backgroundColor: tableColor }">{{
         title }}</div>
     <div v-for="contentHeader in Object.keys(content)"
@@ -43,35 +43,19 @@ const colSpanClass = computed(() => {
     <template v-for="(firstColContent, i) in content[Object.keys(content)[0]]">
       <template v-if="typeof i === 'string'"></template>
       <template v-else>
-        <template v-if="i % 2 === 0">
-          <div class="bg-[#A3A1A52E] text-[20px] flex justify-center items-center">{{ firstColContent }}</div>
-          <template v-for="header in Object.keys(content).slice(1)">
-            <div class="bg-[#A3A1A52E] text-[20px] flex justify-center items-center">{{ content[header][i] }}</div>
-          </template>
-        </template>
-        <template v-else>
-          <div class="bg-white text-[20px] flex justify-center items-center">{{ firstColContent }}</div>
-          <template v-for="header in Object.keys(content).slice(1)">
-            <div class="bg-white text-[20px] flex justify-center items-center">{{ content[header][i] }}</div>
-          </template>
-        </template>
+        <div class="text-[20px] flex justify-center items-center"
+          :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0 }">{{ firstColContent }}</div>
+        <div v-for="header in Object.keys(content).slice(1)" class="text-[20px] flex justify-center items-center"
+          :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0 }">{{ content[header][i] }}</div>
       </template>
     </template>
     <template v-if="content[Object.keys(content)[0]].length < maximum">
       <template
         v-for="i in Array.from({ length: maximum - content[Object.keys(content)[0]].length }, (_, i) => content[Object.keys(content)[0]].length + i)">
-        <template v-if="i % 2 === 0">
-          <div class="bg-[#A3A1A52E] text-[20px]">&nbsp;</div>
-          <template v-for="_ in Object.keys(content).slice(1)">
-            <div class="bg-[#A3A1A52E] text-[20px]">&nbsp;</div>
-          </template>
-        </template>
-        <template v-else>
-          <div class="bg-white text-[20px]">&nbsp;</div>
-          <template v-for="_ in Object.keys(content).slice(1)">
-            <div class="bg-white text-[20px]">&nbsp;</div>
-          </template>
-        </template>
+        <div class="text-[20px] flex justify-center items-center"
+          :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0 }">&nbsp;</div>
+        <div v-for="header in Object.keys(content).slice(1)" class="text-[20px] flex justify-center items-center"
+          :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0 }">&nbsp;</div>
       </template>
     </template>
   </div>
