@@ -99,7 +99,7 @@ watch(nextPageI, async (newNextPageI) => {
     // isBranchStocksLoading.value = true;
     error.value = "";
 
-    const response = await fetch(`http://localhost:5000/api/delivery?page=${nextPageI.value}&limit=10`);
+    const response = await fetch(`http://localhost:5000/api/delivery?page=${newNextPageI}&limit=10`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -129,7 +129,8 @@ onMounted(() => {
     <template v-if="!isDeliveriesLoading">
       <InteractiveTable table-color="0CCE6B" :content="deliveries" :interactive-columns="['Date Receive']"
         class="grid-cols-3 auto-rows-[9.089%] h-212.5" :-row-amt="10"
-        :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle">
+        :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+        :next-page-i="10">
         <template v-for="(deliveryReceived, i) in deliveries['Date Receive']" #[`row-${i}`]>
           <button v-if="receiveDeliveries.includes(i)" @click="receiveDelivery(deliveryIds[i], i)">Receive</button>
           <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {

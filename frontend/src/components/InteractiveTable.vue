@@ -27,6 +27,10 @@ const props = defineProps({
     type: Number,
     required: true
   },
+  "nextPageI": {
+    type: Number,
+    required: true
+  },
   "interactiveHeaders": {
     type: Array,
     required: false
@@ -61,7 +65,7 @@ watch(targetIsVisible, (newTargetIsVisible) => {
         <template v-for="header in Object.keys(content)">
           <div class="text-[25px] flex justify-center items-center"
             :class="{ 'bg-[#A3A1A52E]': curRow % 2 === 0, 'bg-white': !(curRow % 2 === 0) }"
-            :ref="curRow % 10 == 0 ? everyFirstPage : null">
+            :ref="curRow % nextPageI == 0 ? everyFirstPage : null">
             <template v-if="interactiveColumns.includes(header)">
               <slot :name="`row-${curRow}`"></slot>
             </template>

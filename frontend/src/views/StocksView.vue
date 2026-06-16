@@ -68,7 +68,7 @@ const getBranchStocks = async (selectedBranchId = "", page = 1, limit = 10) => {
         "Quantity": result.data.map((stock) => stock.stock_onhold_amount)
       }
     }
-    curSelectedBranchRow.value.push(...Array.from({length: result.data.length}, _ => null));
+    curSelectedBranchRow.value.push(...Array.from({ length: result.data.length }, _ => null));
     if (result.pagination.totalItems > 10) {
       nextPageI.value += 1
       tooLargeContent.value = true;
@@ -143,9 +143,9 @@ watch(nextPageI, async (newNextPageI) => {
 
     let url = "http://localhost:5000/api";
     if (curSelectedBranch.value === "") {
-      url += `/item?page=${nextPageI.value}&limit=10`;
+      url += `/item?page=${newNextPageI}&limit=10`;
     } else {
-      url += `/branch/${curSelectedBranch.value}?page=${nextPageI.value}&limit=10`;
+      url += `/branch/${curSelectedBranch.value}?page=${newNextPageI}&limit=10`;
     }
     const response = await fetch(url);
     if (!response.ok) {
@@ -154,7 +154,7 @@ watch(nextPageI, async (newNextPageI) => {
     const result = await response.json();
     stocks.value["Stock Name"].push(...(result.data.map(item => item.name)));
     stocks.value.Quantity.push(...(result.data.map(item => item.count)));
-    curSelectedBranchRow.value.push(...Array.from({length: result.data.length}, _ => null));
+    curSelectedBranchRow.value.push(...Array.from({ length: result.data.length }, _ => null));
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message;
@@ -186,8 +186,9 @@ onMounted(() => {
   <div class="px-29.5 py-16.75 h-full">
     <template v-if="!isBranchStocksLoading">
       <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns" :content="stocks"
-        class="grid-cols-3 auto-rows-[9.089%] h-212.5" :interactive-headers="interactiveColumns"
-        :-row-amt="10" :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent}" @seen="handle">
+        class="grid-cols-3 auto-rows-[9.089%] h-212.5" :interactive-headers="interactiveColumns" :-row-amt="10"
+        :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+        :next-page-i="10">
         <template v-for="header in interactiveColumns" #[`headers-${header}`]>
           <select v-model="curSelectedBranch">
             <option value="">Choose a Branch</option>
