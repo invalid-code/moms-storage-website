@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBranches } from '@/composables/useBranch';
 import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
@@ -7,37 +8,15 @@ const props = defineProps({
     required: false
   },
 });
-
-const branches = ref(null);
-const error = ref("");
-const isLoading = ref(true);
 const emit = defineEmits(["curSelected"]);
+
 const curSelected = ref(props.defaultValue === undefined ? "" : props.defaultValue);
-
-const getAllBranches = async () => {
-  try {
-    const response = await fetch(`http://localhost:5000/api/branch`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    branches.value = await response.json();
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isLoading.value = false;
-  }
-};
+const { branches, isLoading, error, fetchBranches } = useBranches();
 
 watch(curSelected, (newCurSelected) => emit("curSelected", newCurSelected));
 
 onMounted(() => {
-  getAllBranches();
+  fetchBranches();
 });
 </script>
 

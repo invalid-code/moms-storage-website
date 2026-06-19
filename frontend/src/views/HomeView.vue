@@ -3,6 +3,7 @@ import search from '../assets/search.png';
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
 import InfoCard from '@/components/InfoCard.vue';
 import StockCard from '@/components/StockCard.vue';
+import { useMedicineRecords } from '@/composables/useMedicine';
 import { ref, onMounted, computed, watch } from 'vue';
 
 const items = ref({});
@@ -23,28 +24,7 @@ const branchesDropdownEmitHandler = (payload: string) => {
   curSelectedBranch.value = payload;
 };
 
-const getCurPageItems = async (page = 1, limit = 10) => {
-  try {
-    isItemLoading.value = true;
-    error.value = "";
-
-    const response = await fetch(`http://localhost:5000/api/item?page=${page}&limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    items.value = result;
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isItemLoading.value = false;
-  }
-}
+const { error: medicineError, fetchMedicineRecords, isLoading: isMedicineLoading, medicineRecords } = useMedicineRecords();
 
 const get3RecentDeliveries = async (page = 1, limit = 10) => {
   try {
@@ -94,39 +74,21 @@ const get3LowestStockPerBranch = async () => {
 
 const submitFilters = async () => {
   curPage.value = 1;
-  try {
-    isItemLoading.value = true;
-    if (curSelectedBranch.value === "") {
-      const response = await fetch(`http://localhost:5000/api/item?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      items.value = result;
-    } else {
-      console.log("hello");
-      let url = `http://localhost:5000/api/branch/${curSelectedBranch.value}?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`;
-      if (selectedStockQuantity.value !== null) {
-        url += `&stockQuantity=${selectedStockQuantity.value}`;
-      }
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      result.data = result.data.map((stock) => ({ "name": stock["stock-name"], "count": stock.stock_onhold_amount }));
-      items.value = result;
+  if (curSelectedBranch.value === "") {
+    fetchMedicineRecords(curPage.value, 8, stockSearch.value);
+  } else {
+    let url = `http://localhost:5000/api/branch/${curSelectedBranch.value}?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`;
+    if (selectedStockQuantity.value !== null) {
+      url += `&stockQuantity=${selectedStockQuantity.value}`;
     }
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  } finally {
-    isItemLoading.value = false;
+
+    const result = await response.json();
+    result.data = result.data.map((stock) => ({ "name": stock["stock-name"], "count": stock.stock_onhold_amount }));
+    items.value = result;
   }
 };
 
@@ -152,12 +114,12 @@ const selectStockQuantity = () => {
 };
 
 onMounted(() => {
-  getCurPageItems(curPage.value, 8);
+  fetchMedicineRecords(curPage.value, 8, "");
   get3RecentDeliveries(1, 3);
   get3LowestStockPerBranch();
 });
 watch(curPage, (newPage) => {
-  getCurPageItems(newPage, 8);
+  fetchMedicineRecords(newPage, 8, "");
 });
 </script>
 

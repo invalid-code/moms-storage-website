@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InteractiveTable from '@/components/InteractiveTable.vue';
+import { useMedicineRecord } from '@/composables/useMedicine';
 import { onMounted, ref, watch } from 'vue';
 
 const interactiveColumns = ["Branch"];
@@ -14,6 +15,8 @@ const curSelectedBranch = ref("");
 const curSelectedBranchRow = ref(new Array(10).fill(null));
 const tooLargeContent = ref(false);
 const nextPageI = ref(0);
+
+const { error: medicineError, fetchMedicine, isLoading: isMedicineLoading, medicineRecords } = useMedicineRecord();
 
 const getAllBranches = async () => {
   try {
@@ -70,7 +73,7 @@ const getBranchStocks = async (selectedBranchId = "", page = 1, limit = 10) => {
     }
     curSelectedBranchRow.value.push(...Array.from({ length: result.data.length }, _ => null));
     if (result.pagination.totalItems > 10) {
-      nextPageI.value += 1
+      nextPageI.value += 1;
       tooLargeContent.value = true;
       let secondPageUrl = "http://localhost:5000/api";
 
@@ -103,15 +106,8 @@ const getRowBranchStocks = async (row: number) => {
     isBranchStocksLoading.value = true;
     error.value = "";
     if (curSelectedBranchRow.value[row] === null) {
-      const response = await fetch(`http://localhost:5000/api/item/${stocksRes.value.data[row]._id}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      stocks.value["Stock Name"][row] = result.data.name;
-      stocks.value["Quantity"][row] = result.data.count;
-    }
-    else {
+      fetchMedicine(stocksRes.value.data[row]._id);
+    } else {
       const response = await fetch(`http://localhost:5000/api/branch/${curSelectedBranchRow.value[row]}/stock/${stocksRes.value[row]._id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

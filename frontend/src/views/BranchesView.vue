@@ -1,109 +1,36 @@
 <script setup lang="ts">
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
 import StaticTable from '@/components/StaticTable.vue';
+import { useBranchLowestStocks, useBranch } from '@/composables/useBranch';
+import { useDeliveries } from '@/composables/useDelivery';
 import { onMounted, ref, watch } from 'vue';
 
 const isLowStockLoading = ref(true);
 const isStocksLoading = ref(true);
 const isDeliveryLoading = ref(true);
-const error = ref("");
 const lowestStocks = ref({});
 const stocks = ref({});
-const deliveries = ref({});
 const curSelectedBranch = ref("6a22d28e5882d14a0b85c54b"); // todo: when first load get the default selected value
+
+const { branchLowestStocks, isLoading: branchLowestStocksLoading, error: branchLowestStocksError, fetchBranchLowestStocks } = useBranchLowestStocks();
+const { branch, isLoading: branchStockLoading, error: branchStockError, fetchBranch } = useBranch();
+const { deliveries, isLoading, error, fetchDeliveries } = useDeliveries();
 
 const branchesDropdownEmitHandler = (payload: string) => {
   curSelectedBranch.value = payload;
 };
 
-const getBranchLowestStock = async (selectedBranchId: string, page = 1, limit = 10) => {
-  try {
-    isLowStockLoading.value = true;
-    error.value = "";
-
-    const response = await fetch(`http://localhost:5000/api/branch/${selectedBranchId}/lowest-stock?page=${page}&limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    lowestStocks.value = {
-      "Stock Name": result.data.map((lowStock) => lowStock["stock-name"]),
-      "Stock Amount": result.data.map((lowStock) => lowStock.stock_onhold_amount)
-    }
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isLowStockLoading.value = false;
-  }
-};
-
-const getBranchStocks = async (selectedBranchId: string, page = 1, limit = 10) => {
-  try {
-    isStocksLoading.value = true;
-    error.value = "";
-
-    const response = await fetch(`http://localhost:5000/api/branch/${selectedBranchId}?page=${page}&limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    stocks.value = {
-      "Stock Name": result.data.map((stock) => stock["stock-name"]),
-      "Stock Amount": result.data.map((stock) => stock.stock_onhold_amount)
-    }
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isStocksLoading.value = false;
-  }
-};
-
-const getBranchDeliveries = async (selectedBranchId: string, page = 1, limit = 10) => {
-  try {
-    isDeliveryLoading.value = true;
-    error.value = "";
-
-    const response = await fetch(`http://localhost:5000/api/delivery/${selectedBranchId}?page=${page}&limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    deliveries.value = {
-      "Delivery Status": result.data.map((delivery) => delivery.delivered ? "Delivered" : "Pending"),
-      "Date Requested": result.data.map((delivery) => new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
-      "Date Received": result.data.map((delivery) => new Date(delivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }))
-    };
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isDeliveryLoading.value = false;
-  }
-};
-
 watch(curSelectedBranch, (newSelectedBranch) => {
-  getBranchLowestStock(newSelectedBranch, 1, 4);
-  getBranchStocks(newSelectedBranch, 1, 10);
-  getBranchDeliveries(newSelectedBranch, 1, 4);
+  fetchBranchLowestStocks(newSelectedBranch, 1, 4);
+  fetchBranch(newSelectedBranch, 1, 10, "");
+  // getBranchDeliveries(newSelectedBranch, 1, 4);
+  fetchDeliveries(1, 4);
 });
 onMounted(() => {
-  getBranchLowestStock(curSelectedBranch.value, 1, 4);
-  getBranchStocks(curSelectedBranch.value, 1, 10);
-  getBranchDeliveries(curSelectedBranch.value, 1, 4);
+  fetchBranchLowestStocks(curSelectedBranch.value, 1, 4);
+  fetchBranch(curSelectedBranch.value, 1, 10, "");
+  // getBranchDeliveries(curSelectedBranch.value, 1, 4);
+  fetchDeliveries(1, 4);
 });
 </script>
 
