@@ -3,6 +3,7 @@ import { ref } from "vue";
 
 export function useDeliveries() {
   const deliveries = ref([]);
+  const pagination = ref({});
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
@@ -10,7 +11,9 @@ export function useDeliveries() {
     isLoading.value = true;
     error.value = null;
     try {
-      deliveries.value = await deliveryService.getDeliveries(page, limit);
+      const apiResp = await deliveryService.getDeliveries(page, limit);
+      deliveries.value = apiResp.data;
+      pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -22,8 +25,33 @@ export function useDeliveries() {
     }
   };
 
-  return { deliveries, isLoading, error, fetchDeliveries };
+  return { deliveries, pagination, isLoading, error, fetchDeliveries };
 }
+
+export function useDelivery() {
+  const delivery = ref([]);
+  const isLoading = ref(false);
+  const error = ref<Error | string | null>(null);
+
+  const fetchDelivery = async (id: string) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      deliveries.value = await deliveryService.getDelivery(id);
+    } catch (err) {
+      if (err instanceof Error) {
+        error.value = err.message;
+      } else {
+        error.value = `An unexpected error occurred: ${err}`;
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  return { delivery, isLoading, error, fetchDelivery };
+}
+
 
 export function useCreateDelivery() {
   const isLoading = ref(false);

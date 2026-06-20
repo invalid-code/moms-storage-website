@@ -1,26 +1,27 @@
+import { http } from "@/helper/requestHelper";
+
 export const deliveryService = {
   async getDeliveries(page: number, limit: number) {
-    const response = await fetch(`http://localhost:5000/api/delivery?page=${page}&limit=${limit}`);
-    return response;
+    return http(`/delivery?page=${page}&limit=${limit}`, { method: "GET" });
+  },
+  async getDelivery(id: string) {
+    return http(`/delivery/${id}`, { method: "GET" });
   },
   async createDelivery(data) {
-    const response = await fetch(`http://localhost:5000/api/delivery`, {
-      method: "POST",
-      headers: {
+    return http(`/delivery`, {
+      method: "POST", headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
-    return response;
   },
   async patchDelivery(id: string, data) {
-    const response = await fetch(`http://localhost:5000/api/delivery/${id}`, {
+    return http(`/delivery/${id}`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
-    return response;
   }
 };

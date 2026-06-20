@@ -3,96 +3,39 @@ import search from '../assets/search.png';
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
 import InfoCard from '@/components/InfoCard.vue';
 import StockCard from '@/components/StockCard.vue';
+import { useBranch, useBranchesLowestStocks } from '@/composables/useBranch';
+import { useDeliveries } from '@/composables/useDelivery';
 import { useMedicineRecords } from '@/composables/useMedicine';
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
-const items = ref({});
-const deliveries = ref({});
-const branchStocks = ref({});
-const error = ref("");
-const isItemLoading = ref(true);
-const isDeliveryLoading = ref(true);
-const isBranchLoading = ref(true);
 const curPage = ref(1);
 const stockSearch = ref('');
 const curSelectedBranch = ref("");
 const selectedStockQuantity = ref<number | null>(null);
 const stockQuantityColor = ref("bg-gray-700");
 const stockQuantityText = ref("All");
+// const applyingFilters = ref(false);
 
 const branchesDropdownEmitHandler = (payload: string) => {
   curSelectedBranch.value = payload;
 };
 
-const { error: medicineError, fetchMedicineRecords, isLoading: isMedicineLoading, medicineRecords } = useMedicineRecords();
-
-const get3RecentDeliveries = async (page = 1, limit = 10) => {
-  try {
-    isDeliveryLoading.value = true;
-    error.value = "";
-
-    const response = await fetch(`http://localhost:5000/api/delivery?page=${page}&limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    deliveries.value = result.data;
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isDeliveryLoading.value = false;
-  }
-};
-
-const get3LowestStockPerBranch = async () => {
-  try {
-    isBranchLoading.value = true;
-    error.value = "";
-
-    const response = await fetch("http://localhost:5000/api/branch/lowest-stock");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    branchStocks.value = result.data;
-  } catch (err) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = `An unexpected error occurred: ${err}`;
-    }
-  } finally {
-    isBranchLoading.value = false;
-  }
-};
+const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
+const { deliveries, pagination: _, isLoading: deliveriesLoading, error: deliveriesError, fetchDeliveries } = useDeliveries();
+const { branchesLowestStocks, isLoading: branchesLowestStocksLoading, error: branchesLowestStocksError, fetchBranchesLowestStocks } = useBranchesLowestStocks();
+const { branch, isLoading, error, fetchBranch } = useBranch();
 
 const submitFilters = async () => {
   curPage.value = 1;
   if (curSelectedBranch.value === "") {
     fetchMedicineRecords(curPage.value, 8, stockSearch.value);
   } else {
-    let url = `http://localhost:5000/api/branch/${curSelectedBranch.value}?page=${curPage.value}&limit=${8}&stockName=${stockSearch.value}`;
-    if (selectedStockQuantity.value !== null) {
-      url += `&stockQuantity=${selectedStockQuantity.value}`;
-    }
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    result.data = result.data.map((stock) => ({ "name": stock["stock-name"], "count": stock.stock_onhold_amount }));
-    items.value = result;
+    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value);
   }
 };
 
-const selectStockQuantity = () => {
+const selectStockQuantity = () => {  
+  fetchBranchesLowestStocks();
   if (selectedStockQuantity.value === null) {
     selectedStockQuantity.value = 30;
     stockQuantityColor.value = "bg-red-600";
@@ -115,8 +58,8 @@ const selectStockQuantity = () => {
 
 onMounted(() => {
   fetchMedicineRecords(curPage.value, 8, "");
-  get3RecentDeliveries(1, 3);
-  get3LowestStockPerBranch();
+  fetchDeliveries(1, 3);
+  fetchBranchesLowestStocks();
 });
 watch(curPage, (newPage) => {
   fetchMedicineRecords(newPage, 8, "");
@@ -125,9 +68,9 @@ watch(curPage, (newPage) => {
 
 <template>
   <div class="grid grid-cols-[1fr_4fr] grid-rows-2 gap-x-9.25 gap-y-15.25 px-11.25 py-11.5 h-full">
-    <template v-if="!isBranchLoading">
+    <template v-if="!branchesLowestStocksLoading">
       <InfoCard title="Low Stocks" table-color="bg-[#EF2D56]">
-        <template v-for="(branchStock, i) in branchStocks" #[`row-${i}`]>
+        <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
           <div class="flex items-center px-4.75 pt-5">
             <div class="w-6.25 h-6.25 bg-red-600 rounded-[50%]"></div>
             <p class="text-[30px] whitespace-nowrap ml-3.75">{{ branchStock["stock-name"] }}</p>
@@ -160,25 +103,25 @@ watch(curPage, (newPage) => {
         </div>
       </div>
       <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
-        <template v-if="!isItemLoading">
-          <StockCard v-for="item in items.data" :stock-name="item.name" />
+        <template v-if="!medicineRecordsLoading">
+          <StockCard v-for="medicineRecord in medicineRecords" :stock-name="medicineRecord.name" />
         </template>
       </div>
       <div class="flex gap-5.25 justify-center">
-        <template v-if="!isItemLoading">
-          <template v-if="items.pagination.totalPages > 5">
+        <template v-if="!medicineRecordsLoading">
+          <template v-if="medicineRecordsPagination.totalPages > 5">
             <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&lt;</button>
           </template>
-          <button v-for="i in Array.from({ length: items.pagination.totalPages }, (_, i) => 0 + i)"
+          <button v-for="i in Array.from({ length: medicineRecordsPagination.totalPages }, (_, i) => 0 + i)"
             class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage = i + 1">{{ i + 1
             }}</button>
-          <template v-if="items.pagination.totalPages > 5">
+          <template v-if="medicineRecordsPagination.totalPages > 5">
             <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&gt;</button>
           </template>
         </template>
       </div>
     </div>
-    <template v-if="!isDeliveryLoading">
+    <template v-if="!deliveriesLoading">
       <InfoCard title="Delivery Status" table-color="bg-[#ED7D3A]">
         <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
           <div>

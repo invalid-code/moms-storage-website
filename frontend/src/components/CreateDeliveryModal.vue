@@ -13,11 +13,11 @@ defineProps({
 });
 const emit = defineEmits(['close']);
 
-const isStocksLoading = ref(true);
-const tooLargeContent = ref(false);
-const stocksId = ref([]);
+// const isStocksLoading = ref(true);
+// const stocksId = ref([]);
+// const stocks = ref({});
 const selectedStocks = ref([]);
-const stocks = ref({});
+const tooLargeContent = ref(false);
 const interactiveColumns = ["Stock Name"];
 const curSelectedBranch = ref("6a22d28e5882d14a0b85c54b"); // todo: when first load get the default selected value
 const nextPageI = ref(0);

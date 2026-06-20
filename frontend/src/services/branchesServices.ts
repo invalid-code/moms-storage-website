@@ -1,22 +1,19 @@
+import { http } from "@/helper/requestHelper";
+
 export const branchService = {
   async getBranches() {
-    const response = await fetch(`http://localhost:5000/api/branch`);
-    return response;
+    return http(`/branch`, { method: "GET" });
   },
   async getBranchesLowestStock() {
-    const response = await fetch(`http://localhost:5000/api/branch/lowest-stock`);
-    return response;
+    return http(`/branch/lowest-stock`, { method: "GET" });
   },
   async getBranch(id: string, page: number, limit: number, stockName: string) {
-    const response = await fetch(`http://localhost:5000/api/branch/${id}?page=${page}&limit=${limit}&stockName=${stockName}`);
-    return response;
+    return http(`/branch/${id}?page=${page}&limit=${limit}&stockName=${stockName}`, { method: "GET" });
   },
   async getBranchStock(id: string, stockId: string) {
-    const response = await fetch(`http://localhost:5000/api/branch/${id}/stock/${stockId}`);
-    return response;
+    return http(`/branch/${id}/stock/${stockId}`, { method: "GET" });
   },
   async getBranchLowestStocks(id: string, page: number, limit: number) {
-    const response = await fetch(`http://localhost:5000/api/branch/${id}/lowest-stock?page=${page}&limit=${limit}`);
-    return response;
+    return http(`/branch/${id}/lowest-stock?page=${page}&limit=${limit}`, { method: "GET" });
   }
 };

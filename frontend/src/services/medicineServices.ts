@@ -1,10 +1,10 @@
+import { http } from "@/helper/requestHelper";
+
 export const medicineService = {
   async getMedicineRecords(page: number, limit: number, medicineName: string) {
-    const response = await fetch(`http://localhost:5000/api/item?page=${page}&limit=${limit}&stockName=${medicineName}`);
-    return response;
+    return http(`/item?page=${page}&limit=${limit}&stockName=${medicineName}`, { method: "GET"});
   },
   async getMedicineRecord(id: string) {
-    const response = await fetch(`http://localhost:5000/api/item/${id}`);
-    return response;
+    return http(`/item/${id}`, { method: "GET"});
   }
 };

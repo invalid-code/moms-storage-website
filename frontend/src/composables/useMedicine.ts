@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 export function useMedicineRecords() {
   const medicineRecords = ref([]);
+  const pagination = ref({});
   const isLoading = ref(false);
   const error = ref<Error|string|null>(null);
 
@@ -10,7 +11,9 @@ export function useMedicineRecords() {
     isLoading.value = true;
     error.value = null;
     try {
-      medicineRecords.value = await medicineService.getMedicineRecords(page, limit, medicineName);
+      const apiResp = await medicineService.getMedicineRecords(page, limit, medicineName);
+      medicineRecords.value = apiResp.data;
+      pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -22,7 +25,7 @@ export function useMedicineRecords() {
     }
   };
 
-  return { medicineRecords, isLoading, error, fetchMedicineRecords };
+  return { medicineRecords, pagination, isLoading, error, fetchMedicineRecords };
 }
 
 export function useMedicineRecord() {
