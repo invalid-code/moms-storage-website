@@ -10,7 +10,7 @@ export function useBranches() {
     isLoading.value = true;
     error.value = null;
     try {
-      branches.value = await branchService.getBranches();
+      branches.value = (await branchService.getBranches()).data;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -103,6 +103,7 @@ export function useBranchStock() {
 
 export function useBranchLowestStocks() {
   const branchLowestStocks = ref([]);
+  const pagination = ref({});
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
@@ -110,7 +111,9 @@ export function useBranchLowestStocks() {
     isLoading.value = true;
     error.value = null;
     try {
-      branchLowestStocks.value = await branchService.getBranchLowestStocks(id, page, limit);
+      const apiResp = await branchService.getBranchLowestStocks(id, page, limit);
+      branchLowestStocks.value = apiResp.data;
+      pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;

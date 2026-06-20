@@ -28,16 +28,18 @@ export function useDeliveries() {
   return { deliveries, pagination, isLoading, error, fetchDeliveries };
 }
 
-export function useDelivery() {
-  const delivery = ref([]);
+export function useBranchDeliveries() {
+  const branchDeliveries = ref([]);
+  const pagination = ref({});
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
-
-  const fetchDelivery = async (id: string) => {
+  const fetchBranchDeliveries = async (branchId: string, page: number, limit: number) => {
     isLoading.value = true;
     error.value = null;
     try {
-      deliveries.value = await deliveryService.getDelivery(id);
+      const apiResp = await deliveryService.getBranchDeliveries(branchId, page, limit);
+      branchDeliveries.value = apiResp.data;
+      pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -49,7 +51,7 @@ export function useDelivery() {
     }
   };
 
-  return { delivery, isLoading, error, fetchDelivery };
+  return { branchDeliveries, pagination, isLoading, error, fetchBranchDeliveries };
 }
 
 

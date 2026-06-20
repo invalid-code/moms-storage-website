@@ -35,7 +35,7 @@ const submitFilters = async () => {
 };
 
 const selectStockQuantity = () => {  
-  fetchBranchesLowestStocks();
+  // fetchBranchesLowestStocks();
   if (selectedStockQuantity.value === null) {
     selectedStockQuantity.value = 30;
     stockQuantityColor.value = "bg-red-600";
@@ -112,7 +112,7 @@ watch(curPage, (newPage) => {
           <template v-if="medicineRecordsPagination.totalPages > 5">
             <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&lt;</button>
           </template>
-          <button v-for="i in Array.from({ length: medicineRecordsPagination.totalPages }, (_, i) => 0 + i)"
+          <button v-for="i in Array.from({ length: 5 }, (_, i) => 0 + i)"
             class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage = i + 1">{{ i + 1
             }}</button>
           <template v-if="medicineRecordsPagination.totalPages > 5">

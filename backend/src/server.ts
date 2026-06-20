@@ -139,8 +139,11 @@ app.get('/api/item/:id', async (req: Request, res: Response) => {
 });
 
 app.get('/api/branch', async (req: Request, res: Response) => {
-  const allBranchRecords = await branchCollection.find({}).toArray();
-  res.json(allBranchRecords);
+  const data = await branchCollection.find({}).toArray();
+  res.json({
+    success: true,
+    data
+  });
 });
 
 app.get('/api/branch/lowest-stock', async (req: Request, res: Response) => {

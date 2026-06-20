@@ -4,8 +4,8 @@ export const deliveryService = {
   async getDeliveries(page: number, limit: number) {
     return http(`/delivery?page=${page}&limit=${limit}`, { method: "GET" });
   },
-  async getDelivery(id: string) {
-    return http(`/delivery/${id}`, { method: "GET" });
+  async getBranchDeliveries(branchId: string, page: number, limit: number) {
+    return http(`/delivery/${branchId}?page=${page}&limit=${limit}`, { method: "GET" });
   },
   async createDelivery(data) {
     return http(`/delivery`, {
