@@ -68,7 +68,7 @@ watch(curPage, (newPage) => {
 
 <template>
   <div class="grid grid-cols-[1fr_4fr] grid-rows-2 gap-x-9.25 gap-y-15.25 px-11.25 py-11.5 h-full">
-    <template v-if="!branchesLowestStocksLoading">
+    <div v-show="!branchesLowestStocksLoading">
       <InfoCard title="Low Stocks" table-color="bg-[#EF2D56]">
         <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
           <div class="flex items-center px-4.75 pt-5">
@@ -78,7 +78,7 @@ watch(curPage, (newPage) => {
           <div class="text-[20px] px-4.75">{{ branchStock.branch }}</div>
         </template>
       </InfoCard>
-    </template>
+    </div>
     <div class="bg-white row-span-2 rounded-[25px] overflow-hidden px-7.5 py-4.5">
       <div class="flex mb-12.75 justify-between">
         <div class="bg-[#363537] px-3.25 py-1.5 rounded-[15px] flex">
@@ -103,12 +103,12 @@ watch(curPage, (newPage) => {
         </div>
       </div>
       <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
-        <template v-if="!medicineRecordsLoading">
+        <div v-show="!medicineRecordsLoading">
           <StockCard v-for="medicineRecord in medicineRecords" :stock-name="medicineRecord.name" />
-        </template>
+        </div>
       </div>
       <div class="flex gap-5.25 justify-center">
-        <template v-if="!medicineRecordsLoading">
+        <div v-show="!medicineRecordsLoading">
           <template v-if="medicineRecordsPagination.totalPages > 5">
             <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&lt;</button>
           </template>
@@ -118,10 +118,10 @@ watch(curPage, (newPage) => {
           <template v-if="medicineRecordsPagination.totalPages > 5">
             <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&gt;</button>
           </template>
-        </template>
+        </div>
       </div>
     </div>
-    <template v-if="!deliveriesLoading">
+    <div v-show="!deliveriesLoading">
       <InfoCard title="Delivery Status" table-color="bg-[#ED7D3A]">
         <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
           <div>
@@ -134,7 +134,7 @@ watch(curPage, (newPage) => {
           </div>
         </template>
       </InfoCard>
-    </template>
+    </div>
   </div>
 </template>
 

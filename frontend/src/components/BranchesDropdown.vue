@@ -22,14 +22,15 @@ onMounted(() => {
 
 <template>
   <div>
-    <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center"
-      v-model="curSelected">
-      <option v-if="defaultValue === undefined" value="">Choose a branch</option>
-      <template v-if="!isLoading">
-        <option v-for="branch in branches" :key="branch._id" :value="branch._id">{{ `${branch.name.toUpperCase()}` }}
+    <div v-show="!isLoading">
+      <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center"
+        v-model="curSelected">
+        <option v-if="defaultValue === undefined" value="">Choose a branch</option>
+        <option v-for="branch in branches" :key="branch._id" :value="branch._id">{{
+          `${branch.name.toUpperCase()}` }}
         </option>
-      </template>
-    </select>
+      </select>
+    </div>
   </div>
 </template>
 
