@@ -10,22 +10,23 @@ const curSelectedBranch = ref("");
 const curSelectedBranchRow = ref(new Array(10).fill(null));
 const tooLargeContent = ref(false);
 const curPage = ref(1);
+let selectedRow = 0;
 
-const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
+const medicineRecords = ref([]);
+const branchStocks = ref([]);
+const { medicineRecords: curMedicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
 const { branches, isLoading: branchesLoading, error: branchesError, fetchBranches } = useBranches();
-const { branchStock, isLoading: branchStockLoading, error: branchStockError, fetchBranchStock } = useBranchStock();
-const { branch, isLoading: branchLoading, error: branchError, fetchBranch } = useBranch();
+const { branchStock, error: branchStockError, fetchBranchStock } = useBranchStock();
+const { branch: curBranchStocks, pagination: branchPagination, isLoading: _, error: branchError, fetchBranch } = useBranch();
 let isFirst = true;
-let stockName = [];
-let quantity = [];
+
+watch(curMedicineRecords, newCurMedicineRecords => medicineRecords.value.push(...newCurMedicineRecords));
 
 const translatedMedicineRecords = computed(() => {
-  stockName.push(...medicineRecords.value.map(medicineRecord => medicineRecord.name));
-  quantity.push(...medicineRecords.value.map(medicineRecord => medicineRecord.count));
   return {
-    "Stock Name": stockName,
+    "Stock Name": medicineRecords.value.map(medicineRecord => medicineRecord.name),
     Branch: [],
-    Quantity: quantity
+    Quantity: medicineRecords.value.map(medicineRecord => medicineRecord.count)
   };
 });
 
@@ -33,11 +34,39 @@ watch(translatedMedicineRecords, _ => {
   if (medicineRecordsPagination.value.currentPage > 1) {
     curSelectedBranchRow.value.push(...new Array(10).fill(null));
   }
+
   if (isFirst && medicineRecordsPagination.value.totalItems > 10) {
     tooLargeContent.value = true;
     fetchMedicineRecords(curPage.value, 10, "");
     isFirst = false;
   }
+});
+
+watch(curBranchStocks, newCurBranchStock => branchStocks.value.push(...newCurBranchStock));
+
+const translatedBranchStocks = computed(() => {
+  return {
+    "Stock Name": branchStocks.value.map(branchStock => branchStock["stock-name"]),
+    Branch: [],
+    Quantity: branchStocks.value.map(branchStock => branchStock.stock_onhold_amount)
+  };
+});
+
+watch(translatedBranchStocks, _ => {
+  if (branchPagination.value.currentPage > 1) {
+    curSelectedBranchRow.value.push(...new Array(10).fill(curSelectedBranch.value));
+  }
+
+  if (isFirst && branchPagination.value.totalItems > 10) {
+    tooLargeContent.value = true;
+    fetchBranch(curSelectedBranch.value, curPage.value, 10, "", null);
+    isFirst = false;
+  }
+});
+
+watch(branchStock, newBranchStock => {
+  branchStocks.value[selectedRow]["stock-name"] = newBranchStock.stock_name;
+  branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.stock_onhold_amount;
 });
 
 const handle = (_: string) => {
@@ -46,38 +75,78 @@ const handle = (_: string) => {
   }
 };
 
+const getRowBranchStocks = (id: number) => {
+  selectedRow = id;
+
+  fetchBranchStock(curSelectedBranchRow.value[id], branchStocks.value[id]._id);
+};
+
 watch(curPage, async (newCurPage) => {
   if (newCurPage < 3) return;
+
   if (curSelectedBranch.value === "") {
     fetchMedicineRecords(newCurPage, 10, "");
   } else {
-    fetchBranch(curSelectedBranch.value, newCurPage, 10, "");
+    fetchBranch(curSelectedBranch.value, newCurPage, 10, "", null);
   }
 });
 
 watch(curSelectedBranch, (newCurSelectedBranch) => {
+  isFirst = true;
+  curPage.value = 1;
+
   if (newCurSelectedBranch !== "") {
-    // curSelectedBranchRow.value = curSelectedBranchRow.value.map((_) => newCurSelectedBranch);
+    curSelectedBranchRow.value = new Array(10).fill(curSelectedBranch.value); // todo needs to match what we receive
+    fetchBranch(newCurSelectedBranch, curPage.value, 10, "", null);
   } else {
-    fetchMedicineRecords(1, 10, "");
-    isFirst = true;
+    curSelectedBranchRow.value = new Array(10).fill(null);
+    fetchMedicineRecords(curPage.value, 10, "");
   }
+
+  curPage.value += 1;
+  isFirst = true;
 });
 
 onMounted(() => {
   fetchMedicineRecords(curPage.value, 10, "");
   curPage.value += 1;
   fetchBranches();
-  fetchBranch("", 1, 10, "");
 });
 </script>
 
 <template>
   <div class="px-29.5 py-16.75 h-full">
-    <div v-show="!medicineRecordsLoading">
-      <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns"
-        :content="translatedMedicineRecords" class="grid-cols-3 auto-rows-[9.089%] h-212.5"
-        :interactive-headers="interactiveColumns" :-row-amt="10"
+    <template v-if="curSelectedBranch === ''">
+      <div v-show="!medicineRecordsLoading">
+        <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns"
+          :content="translatedMedicineRecords" class="grid-cols-3 auto-rows-[9.089%] h-212.5"
+          :interactive-headers="interactiveColumns" :-row-amt="10"
+          :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+          :next-page-i="10">
+          <template v-for="header in interactiveColumns" #[`headers-${header}`]>
+            <div v-show="!branchesLoading">
+              <select v-model="curSelectedBranch">
+                <option value="">Choose a Branch</option>
+                <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
+              </select>
+            </div>
+          </template>
+          <template v-for="i in Array.from({ length: translatedMedicineRecords['Stock Name'].length }, (_, i) => 0 + i)"
+            #[`row-${i}`]>
+            <div v-show="!branchesLoading">
+              <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
+                <option :value="null">Choose A Branch</option>
+                <option v-for="branch in branches" :value="branch._id">{{
+                  branch.name.toUpperCase() }}</option>
+              </select>
+            </div>
+          </template>
+        </InteractiveTable>
+      </div>
+    </template>
+    <template v-else>
+      <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns" :content="translatedBranchStocks"
+        class="grid-cols-3 auto-rows-[9.089%] h-212.5" :interactive-headers="interactiveColumns" :-row-amt="10"
         :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
         :next-page-i="10">
         <template v-for="header in interactiveColumns" #[`headers-${header}`]>
@@ -88,7 +157,7 @@ onMounted(() => {
             </select>
           </div>
         </template>
-        <template v-for="i in Array.from({ length: translatedMedicineRecords['Stock Name'].length }, (_, i) => 0 + i)"
+        <template v-for="i in Array.from({ length: translatedBranchStocks['Stock Name'].length }, (_, i) => 0 + i)"
           #[`row-${i}`]>
           <div v-show="!branchesLoading">
             <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
@@ -99,7 +168,7 @@ onMounted(() => {
           </div>
         </template>
       </InteractiveTable>
-    </div>
+    </template>
   </div>
 </template>
 

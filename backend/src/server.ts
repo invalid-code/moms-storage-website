@@ -111,33 +111,6 @@ app.get('/api/item', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/item/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid ID format',
-      });
-    }
-
-    const data = await medicineCollection.findOne({ _id: new ObjectId(id) });
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-
-  } catch (err) {
-    if (err instanceof Error) {
-      res.status(500).json({ success: false, message: err.message });
-    } else {
-      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
-    }
-  }
-});
-
 app.get('/api/branch', async (req: Request, res: Response) => {
   const data = await branchCollection.find({}).toArray();
   res.json({

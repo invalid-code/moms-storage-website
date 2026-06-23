@@ -39,12 +39,12 @@ const branchesDropdownEmitHandler = (payload: string) => {
 
 watch(curSelectedBranch, (newSelectedBranch) => {
   fetchBranchLowestStocks(newSelectedBranch, 1, 4);
-  fetchBranch(newSelectedBranch, 1, 10, "");
+  fetchBranch(newSelectedBranch, 1, 10, "", null);
   fetchBranchDeliveries(newSelectedBranch, 1, 4);
 });
 onMounted(() => {
   fetchBranchLowestStocks(curSelectedBranch.value, 1, 4);
-  fetchBranch(curSelectedBranch.value, 1, 10, "");
+  fetchBranch(curSelectedBranch.value, 1, 10, "", null);
   fetchBranchDeliveries(curSelectedBranch.value, 1, 4);
 });
 </script>

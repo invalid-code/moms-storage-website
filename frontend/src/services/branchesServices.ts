@@ -7,8 +7,8 @@ export const branchService = {
   async getBranchesLowestStock() {
     return http(`/branch/lowest-stock`, { method: "GET" });
   },
-  async getBranch(id: string, page: number, limit: number, stockName: string) {
-    return http(`/branch/${id}?page=${page}&limit=${limit}&stockName=${stockName}`, { method: "GET" });
+  async getBranch(id: string, page: number, limit: number, stockName: string, stockQuantity: number | null) {
+    return http(`/branch/${id}?page=${page}&limit=${limit}&stockName=${stockName}&stockQuantity=${stockQuantity === null ? '' : stockQuantity}`, { method: "GET" });
   },
   async getBranchStock(id: string, stockId: string) {
     return http(`/branch/${id}/stock/${stockId}`, { method: "GET" });

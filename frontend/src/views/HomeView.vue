@@ -14,28 +14,30 @@ const curSelectedBranch = ref("");
 const selectedStockQuantity = ref<number | null>(null);
 const stockQuantityColor = ref("bg-gray-700");
 const stockQuantityText = ref("All");
-// const applyingFilters = ref(false);
+const startingPoint = ref(0);
+let selectedBranch = ref("");
 
 const branchesDropdownEmitHandler = (payload: string) => {
-  curSelectedBranch.value = payload;
+  selectedBranch.value = payload;
 };
 
 const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
 const { deliveries, pagination: _, isLoading: deliveriesLoading, error: deliveriesError, fetchDeliveries } = useDeliveries();
 const { branchesLowestStocks, isLoading: branchesLowestStocksLoading, error: branchesLowestStocksError, fetchBranchesLowestStocks } = useBranchesLowestStocks();
-const { branch, isLoading, error, fetchBranch } = useBranch();
+const { branch, pagination: branchPagination, isLoading: branchLoading, error: branhcError, fetchBranch } = useBranch();
 
 const submitFilters = async () => {
+  curSelectedBranch.value = selectedBranch.value;
   curPage.value = 1;
+  startingPoint.value = 0;
   if (curSelectedBranch.value === "") {
     fetchMedicineRecords(curPage.value, 8, stockSearch.value);
   } else {
-    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value);
+    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value, selectedStockQuantity.value);
   }
 };
 
-const selectStockQuantity = () => {  
-  // fetchBranchesLowestStocks();
+const selectStockQuantity = () => {
   if (selectedStockQuantity.value === null) {
     selectedStockQuantity.value = 30;
     stockQuantityColor.value = "bg-red-600";
@@ -56,13 +58,30 @@ const selectStockQuantity = () => {
   }
 };
 
+const moveRight = () => {
+  if (startingPoint.value + 5 < medicineRecordsPagination.value.totalPages) {
+    startingPoint.value += 1;
+  }
+};
+
+const moveLeft = () => {
+  if (startingPoint.value != 0) {
+    startingPoint.value -= 1;
+  }
+};
+
 onMounted(() => {
   fetchMedicineRecords(curPage.value, 8, "");
   fetchDeliveries(1, 3);
   fetchBranchesLowestStocks();
 });
+
 watch(curPage, (newPage) => {
-  fetchMedicineRecords(newPage, 8, "");
+  if (curSelectedBranch.value === "") {
+    fetchMedicineRecords(newPage, 8, stockSearch.value);
+  } else {
+    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value, selectedStockQuantity.value);
+  }
 });
 </script>
 
@@ -91,7 +110,7 @@ watch(curPage, (newPage) => {
         </div>
         <div class="flex">
           <BranchesDropdown @cur-selected="branchesDropdownEmitHandler" />
-          <div v-if="curSelectedBranch === ''" class="flex items-center px-3.5">
+          <div v-if="selectedBranch === ''" class="flex items-center px-3.5">
             <div class="w-7.5 h-7.5 rounded-[50%] bg-gray-600"></div>
             <p class="text-[23px] ml-2.75">All</p>
           </div>
@@ -102,24 +121,48 @@ watch(curPage, (newPage) => {
           <button @click="submitFilters" class="bg-[#DCED31] px-3.5 py-3.75 rounded-[20px] text-[23px]">Apply</button>
         </div>
       </div>
-      <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
+      <template v-if="curSelectedBranch === ''">
         <div v-show="!medicineRecordsLoading">
-          <StockCard v-for="medicineRecord in medicineRecords" :stock-name="medicineRecord.name" />
+          <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
+            <StockCard v-for="medicineRecord in medicineRecords" :stock-name="medicineRecord.name" />
+          </div>
+          <div class="flex gap-5.25 justify-center">
+            <template v-if="medicineRecordsPagination.totalPages > 5">
+              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
+                @click="moveLeft">&lt;</button>
+            </template>
+            <button
+              v-for="i in Array.from({ length: medicineRecordsPagination.totalPages > 5 ? 5 : medicineRecordsPagination.totalPages }, (_, i) => startingPoint + i)"
+              class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage += 1">{{ i + 1
+              }}</button>
+            <template v-if="medicineRecordsPagination.totalPages > 5">
+              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
+                @click="moveRight">&gt;</button>
+            </template>
+          </div>
         </div>
-      </div>
-      <div class="flex gap-5.25 justify-center">
-        <div v-show="!medicineRecordsLoading">
-          <template v-if="medicineRecordsPagination.totalPages > 5">
-            <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&lt;</button>
-          </template>
-          <button v-for="i in Array.from({ length: 5 }, (_, i) => 0 + i)"
-            class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage = i + 1">{{ i + 1
-            }}</button>
-          <template v-if="medicineRecordsPagination.totalPages > 5">
-            <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]">&gt;</button>
-          </template>
+      </template>
+      <template v-else>
+        <div v-show="!branchLoading">
+          <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
+            <StockCard v-for="branchStocks in branch" :stock-name="branchStocks['stock-name']" />
+          </div>
+          <div class="flex gap-5.25 justify-center">
+            <template v-if="branchPagination.totalPages > 5">
+              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
+                @click="moveLeft">&lt;</button>
+            </template>
+            <button
+              v-for="i in Array.from({ length: branchPagination.totalPages > 5 ? 5 : branchPagination.totalPages }, (_, i) => startingPoint + i)"
+              class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage += 1">{{ i + 1
+              }}</button>
+            <template v-if="branchPagination.totalPages > 5">
+              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
+                @click="moveRight">&gt;</button>
+            </template>
+          </div>
         </div>
-      </div>
+      </template>
     </div>
     <div v-show="!deliveriesLoading">
       <InfoCard title="Delivery Status" table-color="bg-[#ED7D3A]">

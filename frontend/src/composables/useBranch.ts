@@ -56,11 +56,11 @@ export function useBranch() {
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
-  const fetchBranch = async (id: string, page: number, limit: number, stockName: string) => {
+  const fetchBranch = async (id: string, page: number, limit: number, stockName: string, stockQuantity: number  | null) => {
     isLoading.value = true;
     error.value = null;
     try {
-      const apiResp = await branchService.getBranch(id, page, limit, stockName);
+      const apiResp = await branchService.getBranch(id, page, limit, stockName, stockQuantity);
       branch.value = apiResp.data;
       pagination.value = apiResp.pagination;
     } catch (err) {
@@ -78,7 +78,7 @@ export function useBranch() {
 }
 
 export function useBranchStock() {
-  const branchStock = ref([]);
+  const branchStock = ref({});
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
