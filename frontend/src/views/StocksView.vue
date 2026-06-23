@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import InteractiveTable from '@/components/InteractiveTable.vue';
 import { useBranch, useBranches, useBranchStock } from '@/composables/useBranch';
-import { useMedicineRecords } from '@/composables/useMedicine';
+import { useMedicineRecord, useMedicineRecords } from '@/composables/useMedicine';
 import { computed, onMounted, ref, watch } from 'vue';
-import { C } from 'vue-router/dist/router-CWoNjPRp.mjs';
 
 const interactiveColumns = ["Branch"];
 
@@ -19,6 +18,7 @@ const { medicineRecords: curMedicineRecords, pagination: medicineRecordsPaginati
 const { branches, isLoading: branchesLoading, error: branchesError, fetchBranches } = useBranches();
 const { branchStock, error: branchStockError, fetchBranchStock } = useBranchStock();
 const { branch: curBranchStocks, pagination: branchPagination, isLoading: _, error: branchError, fetchBranch } = useBranch();
+const { medicineRecord, isLoading, error, fetchMedicineRecord } = useMedicineRecord();
 let isFirst = true;
 
 watch(curMedicineRecords, newCurMedicineRecords => medicineRecords.value.push(...newCurMedicineRecords));
@@ -65,15 +65,23 @@ watch(translatedBranchStocks, _ => {
   }
 });
 
+watch(medicineRecord, newMedicineRecord => {
+  if (curSelectedBranch.value === "") {
+    medicineRecords.value[selectedRow].name = newMedicineRecord.data.name;
+    medicineRecords.value[selectedRow].count = newMedicineRecord.data.count;
+  } else {
+    branchStocks.value[selectedRow]["stock-name"] = newMedicineRecord.data.name;
+    branchStocks.value[selectedRow].stock_onhold_amount = newMedicineRecord.data.count;
+  }
+});
+
 watch(branchStock, newBranchStock => {
   if (curSelectedBranch.value === "") {
     medicineRecords.value[selectedRow].name = newBranchStock.data.stock_name;
     medicineRecords.value[selectedRow].count = newBranchStock.data.stock_onhold_amount;
   } else {
-    // console.log("before", branchStock.value);
     branchStocks.value[selectedRow]["stock-name"] = newBranchStock.data.stock_name;
     branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.data.stock_onhold_amount;
-    // console.log("", branchStock.value);
   }
 });
 
@@ -92,7 +100,12 @@ const getRowBranchStocks = (id: number) => {
   } else {
     stockId = branchStocks.value[id]["stock-id"];
   }
-  fetchBranchStock(curSelectedBranchRow.value[id], stockId);
+
+  if (curSelectedBranchRow.value[id] === null) {
+    fetchMedicineRecord(stockId);
+  } else {
+    fetchBranchStock(curSelectedBranchRow.value[id], stockId);
+  }
 };
 
 watch(curPage, async (newCurPage) => {
@@ -107,6 +120,8 @@ watch(curPage, async (newCurPage) => {
 
 watch(curSelectedBranch, (newCurSelectedBranch) => {
   isFirst = true;
+  medicineRecords.value = [];
+  branchStocks.value = [];
   curPage.value = 1;
 
   if (newCurSelectedBranch !== "") {
@@ -118,7 +133,6 @@ watch(curSelectedBranch, (newCurSelectedBranch) => {
   }
 
   curPage.value += 1;
-  isFirst = true;
 });
 
 onMounted(() => {

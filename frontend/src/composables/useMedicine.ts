@@ -27,3 +27,27 @@ export function useMedicineRecords() {
 
   return { medicineRecords, pagination, isLoading, error, fetchMedicineRecords };
 }
+
+export function useMedicineRecord() {
+  const medicineRecord = ref({});
+  const isLoading = ref(false);
+  const error = ref<Error|string|null>(null);
+
+  const fetchMedicineRecord = async (id: string) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      medicineRecord.value = await medicineService.getMedicineRecord(id);
+    } catch (err) {
+      if (err instanceof Error) {
+        error.value = err.message;
+      } else {
+        error.value = `An unexpected error occurred: ${err}`;
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  return { medicineRecord, isLoading, error, fetchMedicineRecord };
+}
