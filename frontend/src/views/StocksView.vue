@@ -3,6 +3,7 @@ import InteractiveTable from '@/components/InteractiveTable.vue';
 import { useBranch, useBranches, useBranchStock } from '@/composables/useBranch';
 import { useMedicineRecords } from '@/composables/useMedicine';
 import { computed, onMounted, ref, watch } from 'vue';
+import { C } from 'vue-router/dist/router-CWoNjPRp.mjs';
 
 const interactiveColumns = ["Branch"];
 
@@ -65,8 +66,15 @@ watch(translatedBranchStocks, _ => {
 });
 
 watch(branchStock, newBranchStock => {
-  branchStocks.value[selectedRow]["stock-name"] = newBranchStock.stock_name;
-  branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.stock_onhold_amount;
+  if (curSelectedBranch.value === "") {
+    medicineRecords.value[selectedRow].name = newBranchStock.data.stock_name;
+    medicineRecords.value[selectedRow].count = newBranchStock.data.stock_onhold_amount;
+  } else {
+    // console.log("before", branchStock.value);
+    branchStocks.value[selectedRow]["stock-name"] = newBranchStock.data.stock_name;
+    branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.data.stock_onhold_amount;
+    // console.log("", branchStock.value);
+  }
 });
 
 const handle = (_: string) => {
@@ -78,7 +86,13 @@ const handle = (_: string) => {
 const getRowBranchStocks = (id: number) => {
   selectedRow = id;
 
-  fetchBranchStock(curSelectedBranchRow.value[id], branchStocks.value[id]._id);
+  let stockId = "";
+  if (curSelectedBranch.value === "") {
+    stockId = medicineRecords.value[id]._id;
+  } else {
+    stockId = branchStocks.value[id]["stock-id"];
+  }
+  fetchBranchStock(curSelectedBranchRow.value[id], stockId);
 };
 
 watch(curPage, async (newCurPage) => {

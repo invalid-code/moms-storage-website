@@ -247,6 +247,7 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
       {
         $project: {
           _id: 0,
+          stock_id: "$stocks.stock_id",
           stock_name: "$medicine_info.name",
           stock_onhold_amount: "$stocks.stock_onhold_amount",
           percentage: {
@@ -274,6 +275,7 @@ app.get('/api/branch/:id', async (req: Request, res: Response) => {
             {
               $project: {
                 _id: 0,
+                "stock-id": "$stock_id",
                 "stock-name": "$stock_name",
                 stock_onhold_amount: "$stock_onhold_amount",
                 percentage: { $round: ["$percentage", 2] }
@@ -614,30 +616,79 @@ app.post('/api/delivery', async (req: Request, res: Response) => {
   });
 });
 
+// todo update branch stocks details
+// todo add stock details if it doesn't exists
 app.patch('/api/delivery/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { delivered, stocksReceived } = req.body;
 
   if (!ObjectId.isValid(id)) {
     return res.status(400).json({ success: false, message: 'Invalid ID format' });
   }
 
-  const updatedDelivery = await deliveryCollection.findOneAndUpdate(
-    { _id: new ObjectId(id) },
-    { $set: req.body },
-    { returnDocument: 'after' }
-  );
+  try {
+    const delivery = await deliveryCollection.findOne({ _id: new ObjectId(id) });
 
-  if (!updatedDelivery) {
-    return res.status(404).json({
-      success: false,
-      message: "Delivery not found"
+    if (!delivery) {
+      return res.status(404).json({ success: false, message: "Delivery not found" });
+    }
+
+    const updatePayload = { ...req.body };
+    if (stocksReceived && Array.isArray(stocksReceived)) {
+      updatePayload.stocksReceived = stocksReceived.map((item: any) => ({
+        stockId: new ObjectId(item.stockId),
+        amount: Number(item.amount)
+      }));
+    }
+
+    const updatedDelivery = await deliveryCollection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updatePayload },
+      { returnDocument: 'after' }
+    );
+
+    const branchId = delivery.branch;
+
+    for (const item of stocksReceived) {
+      const stockObjectId = new ObjectId(item.stockId);
+      const amountToAdd = Number(item.amount);
+
+      const updateResult = await branchCollection.updateOne(
+        {
+          _id: new ObjectId(branchId),
+          "stocks.stock_id": stockObjectId
+        },
+        {
+          $inc: { "stocks.$.stock_onhold_amount": amountToAdd }
+        }
+      );
+
+      if (updateResult.matchedCount === 0) {
+        await branchCollection.updateOne(
+          { _id: new ObjectId(branchId) },
+          {
+            $push: {
+              stocks: {
+                stock_id: new ObjectId(stockObjectId),
+                stock_onhold_amount: amountToAdd
+              }
+            }
+          }
+        );
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedDelivery
     });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.status(500).json({ success: false, message: `An unexpected error occurred: ${err}` });
+    }
   }
-
-  res.status(200).json({
-    success: true,
-    data: updatedDelivery
-  });
 });
 
 app.listen(PORT, () => {
