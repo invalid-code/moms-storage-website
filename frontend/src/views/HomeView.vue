@@ -16,6 +16,10 @@ const stockQuantityColor = ref("bg-gray-700");
 const stockQuantityText = ref("All");
 const startingPoint = ref(0);
 let selectedBranch = ref("");
+let medicineRecordsCnt = 4;
+if (window.innerWidth >= 1280) {
+  medicineRecordsCnt = 8;
+}
 
 const branchesDropdownEmitHandler = (payload: string) => {
   selectedBranch.value = payload;
@@ -31,9 +35,9 @@ const submitFilters = async () => {
   curPage.value = 1;
   startingPoint.value = 0;
   if (curSelectedBranch.value === "") {
-    fetchMedicineRecords(curPage.value, 8, stockSearch.value);
+    fetchMedicineRecords(curPage.value, medicineRecordsCnt, stockSearch.value);
   } else {
-    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value, selectedStockQuantity.value);
+    fetchBranch(curSelectedBranch.value, curPage.value, medicineRecordsCnt, stockSearch.value, selectedStockQuantity.value);
   }
 };
 
@@ -71,112 +75,53 @@ const moveLeft = () => {
 };
 
 onMounted(() => {
-  fetchMedicineRecords(curPage.value, 8, "");
+  fetchMedicineRecords(curPage.value, medicineRecordsCnt, "");
   fetchDeliveries(1, 3);
   fetchBranchesLowestStocks();
 });
 
 watch(curPage, (newPage) => {
   if (curSelectedBranch.value === "") {
-    fetchMedicineRecords(newPage, 8, stockSearch.value);
+    fetchMedicineRecords(newPage, medicineRecordsCnt, stockSearch.value);
   } else {
-    fetchBranch(curSelectedBranch.value, curPage.value, 8, stockSearch.value, selectedStockQuantity.value);
+    fetchBranch(curSelectedBranch.value, curPage.value, medicineRecordsCnt, stockSearch.value, selectedStockQuantity.value);
   }
 });
 </script>
 
 <template>
-  <div class="grid grid-cols-[1fr_4fr] grid-rows-2 gap-x-9.25 gap-y-15.25 px-11.25 py-11.5 h-full">
-    <div v-show="!branchesLowestStocksLoading">
-      <InfoCard title="Low Stocks" table-color="bg-[#EF2D56]">
-        <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
-          <div class="flex items-center px-4.75 pt-5">
-            <div class="w-6.25 h-6.25 bg-red-600 rounded-[50%]"></div>
-            <p class="text-[30px] whitespace-nowrap ml-3.75">{{ branchStock["stock-name"] }}</p>
-          </div>
-          <div class="text-[20px] px-4.75">{{ branchStock.branch }}</div>
+  <div class="grid grid-cols-2 gap-5 px-5 py-5">
+    <InfoCard v-show="!branchesLowestStocksLoading" title="Low Stocks" table-color="#EF2D56">
+      <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
+        <div class="flex items-center px-4.75 pt-5">
+          <div class="w-2 h-2 bg-red-600 rounded-[50%]"></div>
+          <p class="text-[12px] whitespace-nowrap ml-3.75">{{ branchStock["stock-name"] }}</p>
+          <div class="text-[9px]">{{ branchStock.branch }}</div>
+        </div>
+      </template>
+    </InfoCard>
+    <InfoCard v-show="!deliveriesLoading" title="Delivery Status" table-color="#ED7D3A">
+      <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
+        <div>
+          <h1 class="text-[30px] whitespace-nowrap px-7.25 pt-[16.66px]">{{ delivery.branchDetails.name.toUpperCase()
+            }}</h1>
+        </div>
+        <div class="text-[20px] px-7.25">
+          <template v-if="delivery.delivered">Delivered</template>
+          <template v-else>Pending</template>
+        </div>
+      </template>
+    </InfoCard>
+    <div class="bg-white col-span-2 rounded-[25px] overflow-hidden px-7.5 py-4.5">
+      <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
+        <template v-if="curSelectedBranch === ''">
+          <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"
+            :stock-name="medicineRecord.name" />
         </template>
-      </InfoCard>
-    </div>
-    <div class="bg-white row-span-2 rounded-[25px] overflow-hidden px-7.5 py-4.5">
-      <div class="flex mb-12.75 justify-between">
-        <div class="bg-[#363537] px-3.25 py-1.5 rounded-[15px] flex">
-          <input
-            class="placeholder:text-white placeholder:text-[23px] bg-[#5B5A5E80] rounded-[10px] pl-3 caret-white text-white mr-1.5 h-full w-[320px]"
-            type="text" placeholder="Search stock..." v-model="stockSearch">
-          <button class="shrink-0 bg-[#5B5A5E80] rounded-[10px] px-2 py-1">
-            <img class="w-9.5 h-9.5" :src="search" alt="stock search button">
-          </button>
-        </div>
-        <div class="flex">
-          <BranchesDropdown @cur-selected="branchesDropdownEmitHandler" />
-          <div v-if="selectedBranch === ''" class="flex items-center px-3.5">
-            <div class="w-7.5 h-7.5 rounded-[50%] bg-gray-600"></div>
-            <p class="text-[23px] ml-2.75">All</p>
-          </div>
-          <button v-else class="flex items-center px-3.5" @click="selectStockQuantity">
-            <div class="w-7.5 h-7.5 rounded-[50%]" :class="stockQuantityColor"></div>
-            <p class="text-[23px] ml-2.75">{{ stockQuantityText }}</p>
-          </button>
-          <button @click="submitFilters" class="bg-[#DCED31] px-3.5 py-3.75 rounded-[20px] text-[23px]">Apply</button>
-        </div>
+        <template v-else>
+          <StockCard v-show="!branchLoading" v-for="branchStocks in branch" :stock-name="branchStocks['stock-name']" />
+        </template>
       </div>
-      <template v-if="curSelectedBranch === ''">
-        <div v-show="!medicineRecordsLoading">
-          <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
-            <StockCard v-for="medicineRecord in medicineRecords" :stock-name="medicineRecord.name" />
-          </div>
-          <div class="flex gap-5.25 justify-center">
-            <template v-if="medicineRecordsPagination.totalPages > 5">
-              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
-                @click="moveLeft">&lt;</button>
-            </template>
-            <button
-              v-for="i in Array.from({ length: medicineRecordsPagination.totalPages > 5 ? 5 : medicineRecordsPagination.totalPages }, (_, i) => startingPoint + i)"
-              class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage += 1">{{ i + 1
-              }}</button>
-            <template v-if="medicineRecordsPagination.totalPages > 5">
-              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
-                @click="moveRight">&gt;</button>
-            </template>
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div v-show="!branchLoading">
-          <div class="grid grid-cols-4 mb-6.25 gap-x-9.25 gap-y-15 grid-rows-2">
-            <StockCard v-for="branchStocks in branch" :stock-name="branchStocks['stock-name']" />
-          </div>
-          <div class="flex gap-5.25 justify-center">
-            <template v-if="branchPagination.totalPages > 5">
-              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
-                @click="moveLeft">&lt;</button>
-            </template>
-            <button
-              v-for="i in Array.from({ length: branchPagination.totalPages > 5 ? 5 : branchPagination.totalPages }, (_, i) => startingPoint + i)"
-              class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]" @click="curPage += 1">{{ i + 1
-              }}</button>
-            <template v-if="branchPagination.totalPages > 5">
-              <button class="bg-[#ED7D3A] text-white w-12.5 h-13.25 text-[23px] rounded-[10px]"
-                @click="moveRight">&gt;</button>
-            </template>
-          </div>
-        </div>
-      </template>
-    </div>
-    <div v-show="!deliveriesLoading">
-      <InfoCard title="Delivery Status" table-color="bg-[#ED7D3A]">
-        <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
-          <div>
-            <h1 class="text-[30px] whitespace-nowrap px-7.25 pt-[16.66px]">{{ delivery.branchDetails.name.toUpperCase()
-              }}</h1>
-          </div>
-          <div class="text-[20px] px-7.25">
-            <template v-if="delivery.delivered">Delivered</template>
-            <template v-else>Pending</template>
-          </div>
-        </template>
-      </InfoCard>
     </div>
   </div>
 </template>

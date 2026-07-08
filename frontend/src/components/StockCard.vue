@@ -10,13 +10,13 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="bg-[#0CCE6B] px-3.75 py-5 rounded-[25px] flex flex-col items-center">
-    <img class="max-h-50 max-w-50 w-auto" :src="imgPlaceholder" alt="placholder image">
-    <div class="flex mt-2.5 w-full">
-      <p class="text-[19px]">{{ stockName }}</p>
+  <div class="bg-[#0CCE6B] p-3 rounded-[25px] flex flex-col items-center">
+    <img class="max-h-26.75 max-w-26.75" :src="imgPlaceholder" alt="placholder image">
+    <div class="flex mt-1.5 w-full">
+      <p class="text-[9px]">{{ stockName }}</p>
       <div class="flex ml-auto items-center">
-        <div class="w-6.25 h-6.25 bg-red-600 rounded-[50%] mr-2.75"></div>
-        <p class="text-[19px]">Low</p>
+        <div class="w-2.5 h-2.5 bg-red-600 rounded-[50%] mr-0.5"></div>
+        <p class="text-[9px]">Low</p>
       </div>
     </div>
   </div>

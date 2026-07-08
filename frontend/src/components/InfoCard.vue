@@ -13,8 +13,8 @@ const props = defineProps({
 
 <template>
   <div class="bg-white rounded-[25px] overflow-hidden">
-    <div class="flex justify-center items-center px-14 py-3" :class="tableColor">
-      <h1 class="font-bold text-[25px] whitespace-nowrap">{{ title }}</h1>
+    <div class="flex justify-center items-center bg-(--tableColor)" :style="{'--tableColor': tableColor}">
+      <h1 class="font-bold text-[16px] whitespace-nowrap">{{ title }}</h1>
     </div>
     <div v-for="i in Array.from({length: 3}, (_, i) => 0 + i)">
       <slot :name="`row-${i}`"></slot>

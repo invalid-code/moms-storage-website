@@ -154,7 +154,7 @@ onMounted(() => {
           <template v-for="header in interactiveColumns" #[`headers-${header}`]>
             <div v-show="!branchesLoading">
               <select v-model="curSelectedBranch">
-                <option value="">Choose a Branch</option>
+                <option value="">Branch</option>
                 <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
               </select>
             </div>
@@ -163,7 +163,7 @@ onMounted(() => {
             #[`row-${i}`]>
             <div v-show="!branchesLoading">
               <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
-                <option :value="null">Choose A Branch</option>
+                <option :value="null">Branch</option>
                 <option v-for="branch in branches" :value="branch._id">{{
                   branch.name.toUpperCase() }}</option>
               </select>

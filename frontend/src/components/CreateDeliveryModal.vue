@@ -68,7 +68,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed top-20 left-[77%] z-50 flex items-center justify-center p-4">
+  <div v-if="isOpen" class="fixed top-10 left-[30%] z-50 flex items-center justify-center p-4">
     <div class="rounded-xl bg-white p-6">
       <BranchesDropdown class="mb-5" :default-value="curSelectedBranch" @cur-selected="" />
       <InteractiveTable v-show="!medicineLoading" class="auto-rows-[16.5%] h-60 mb-5" table-color="0CCE6B"
