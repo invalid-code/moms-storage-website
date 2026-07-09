@@ -143,60 +143,51 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="px-29.5 py-16.75 h-full">
-    <template v-if="curSelectedBranch === ''">
-      <div v-show="!medicineRecordsLoading">
-        <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns"
-          :content="translatedMedicineRecords" class="grid-cols-3 auto-rows-[9.089%] h-212.5"
-          :interactive-headers="interactiveColumns" :-row-amt="10"
-          :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
-          :next-page-i="10">
-          <template v-for="header in interactiveColumns" #[`headers-${header}`]>
-            <div v-show="!branchesLoading">
-              <select v-model="curSelectedBranch">
-                <option value="">Branch</option>
-                <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
-              </select>
-            </div>
-          </template>
-          <template v-for="i in Array.from({ length: translatedMedicineRecords['Stock Name'].length }, (_, i) => 0 + i)"
-            #[`row-${i}`]>
-            <div v-show="!branchesLoading">
-              <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
-                <option :value="null">Branch</option>
-                <option v-for="branch in branches" :value="branch._id">{{
-                  branch.name.toUpperCase() }}</option>
-              </select>
-            </div>
-          </template>
-        </InteractiveTable>
-      </div>
-    </template>
-    <template v-else>
-      <InteractiveTable table-color="0CCE6B" :interactive-columns="interactiveColumns" :content="translatedBranchStocks"
-        class="grid-cols-3 auto-rows-[9.089%] h-212.5" :interactive-headers="interactiveColumns" :-row-amt="10"
-        :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
-        :next-page-i="10">
-        <template v-for="header in interactiveColumns" #[`headers-${header}`]>
-          <div v-show="!branchesLoading">
-            <select v-model="curSelectedBranch">
-              <option value="">Choose a Branch</option>
-              <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
-            </select>
-          </div>
-        </template>
-        <template v-for="i in Array.from({ length: translatedBranchStocks['Stock Name'].length }, (_, i) => 0 + i)"
-          #[`row-${i}`]>
-          <div v-show="!branchesLoading">
-            <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
-              <option :value="null">Choose A Branch</option>
-              <option v-for="branch in branches" :value="branch._id">{{
-                branch.name.toUpperCase() }}</option>
-            </select>
-          </div>
-        </template>
-      </InteractiveTable>
-    </template>
+  <div class="p-5 h-full">
+    <InteractiveTable v-if="curSelectedBranch === ''" v-show="!medicineRecordsLoading" table-color="#0CCE6B"
+      :interactive-columns="interactiveColumns" :content="translatedMedicineRecords"
+      class="grid-cols-3 auto-rows-[9.089%] h-full" :interactive-headers="interactiveColumns" :-row-amt="10"
+      :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+      :next-page-i="10">
+      <template v-for="header in interactiveColumns" #[`headers-${header}`]>
+        <div v-show="!branchesLoading">
+          <select v-model="curSelectedBranch">
+            <option value="">Branch</option>
+            <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
+          </select>
+        </div>
+      </template>
+      <template v-for="i in Array.from({ length: translatedMedicineRecords['Stock Name'].length }, (_, i) => 0 + i)"
+        #[`row-${i}`]>
+        <div v-show="!branchesLoading">
+          <select v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
+            <option :value="null">Branch</option>
+            <option v-for="branch in branches" :value="branch._id">{{
+              branch.name.toUpperCase() }}</option>
+          </select>
+        </div>
+      </template>
+    </InteractiveTable>
+    <InteractiveTable v-else v-show="!branchesLoading" table-color="#0CCE6B" :interactive-columns="interactiveColumns"
+      :content="translatedBranchStocks" class="grid-cols-3 auto-rows-[9.089%] h-full"
+      :interactive-headers="interactiveColumns" :-row-amt="10"
+      :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+      :next-page-i="10">
+      <template v-for="header in interactiveColumns" #[`headers-${header}`]>
+        <select v-show="!branchesLoading" v-model="curSelectedBranch">
+          <option value="">Choose a Branch</option>
+          <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
+        </select>
+      </template>
+      <template v-for="i in Array.from({ length: translatedBranchStocks['Stock Name'].length }, (_, i) => 0 + i)"
+        #[`row-${i}`]>
+        <select v-show="!branchesLoading" v-model="curSelectedBranchRow[i]" @change="getRowBranchStocks(i)">
+          <option :value="null">Choose A Branch</option>
+          <option v-for="branch in branches" :value="branch._id">{{
+            branch.name.toUpperCase() }}</option>
+        </select>
+      </template>
+    </InteractiveTable>
   </div>
 </template>
 

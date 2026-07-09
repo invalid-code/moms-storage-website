@@ -52,21 +52,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="px-29.5 py-16.75 h-full">
-    <div v-show="!deliveriesLoading">
-      <InteractiveTable table-color="0CCE6B" :content="translatedDeliveries" :interactive-columns="['Date Receive']"
-        class="grid-cols-3 auto-rows-[9.089%] h-212.5" :-row-amt="10"
-        :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
-        :next-page-i="10">
-        <template v-for="(deliveryReceived, i) in translatedDeliveries['Date Receive']" #[`row-${i}`]>
-          <button v-if="receiveDeliveries.includes(i)" @click="receiveDelivery(deliveryIds[i], i)">Receive</button>
-          <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {
-            year: "numeric", month: "long", day:
-              "numeric"
-          }) }}</p>
-        </template>
-      </InteractiveTable>
-    </div>
+  <div class="p-5 h-full">
+    <InteractiveTable v-show="!deliveriesLoading" table-color="#0CCE6B" :content="translatedDeliveries"
+      :interactive-columns="['Date Receive']" class="grid-cols-3 auto-rows-[9.089%] h-full" :-row-amt="10"
+      :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
+      :next-page-i="10">
+      <template v-for="(deliveryReceived, i) in translatedDeliveries['Date Receive']" #[`row-${i}`]>
+        <button v-if="receiveDeliveries.includes(i)" @click="receiveDelivery(deliveryIds[i], i)">Receive</button>
+        <p v-else>{{ new Date(deliveryReceived).toLocaleDateString("en-PH", {
+          year: "numeric", month: "long", day:
+            "numeric"
+        }) }}</p>
+      </template>
+    </InteractiveTable>
   </div>
 </template>
 

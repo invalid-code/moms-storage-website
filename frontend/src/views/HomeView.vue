@@ -90,7 +90,7 @@ watch(curPage, (newPage) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-5 px-5 py-5">
+  <div class="grid grid-cols-2 gap-5 p-5 h-full">
     <InfoCard v-show="!branchesLowestStocksLoading" title="Low Stocks" table-color="#EF2D56">
       <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
         <div class="flex items-center px-4.75 pt-5">
@@ -112,7 +112,7 @@ watch(curPage, (newPage) => {
         </div>
       </template>
     </InfoCard>
-    <div class="bg-white col-span-2 rounded-[25px] overflow-hidden px-7.5 py-4.5">
+    <div class="bg-white col-span-2 rounded-[25px] overflow-hidden p-5">
       <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
         <template v-if="curSelectedBranch === ''">
           <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"

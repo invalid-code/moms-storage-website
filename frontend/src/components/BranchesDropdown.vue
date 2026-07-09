@@ -23,7 +23,7 @@ onMounted(() => {
 <template>
   <div>
     <div v-show="!isLoading">
-      <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[23px] font-bold border-4 text-center"
+      <select class="h-full border-[#EF2D56] text-[#EF2D56] text-[12px] font-bold border-4 text-center"
         v-model="curSelected">
         <option v-if="defaultValue === undefined" value="">Branch</option>
         <option v-for="branch in branches" :key="branch._id" :value="branch._id">{{

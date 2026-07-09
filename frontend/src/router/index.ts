@@ -22,6 +22,11 @@ const routes = [
     name: 'deliveries',
     component: () => import('../views/DeliveriesView.vue')
   },
+  {
+    path: '/delivery/:deliveryId',
+    name: 'delivery',
+    component: () => import('../views/DeliveryView.vue')
+  },
 ]
 
 const router = createRouter({

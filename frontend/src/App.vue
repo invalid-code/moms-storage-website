@@ -25,8 +25,11 @@ const route = useRoute();
 
   <CreateDeliveryModal :isOpen="isPopupVisible" @close="isPopupVisible = false" />
 
-  <div class="flex">
-    <aside class="flex justify-around bg-[#363537] w-full bottom-0 fixed h-12.5">
+  <div class="flex flex-col h-[calc(100vh-50px)]">
+    <main class="bg-[#F5F5F5] flex-1 h-full">
+      <router-view />
+    </main>
+    <aside class="flex justify-around bg-[#363537] w-full h-12.5">
       <router-link to="/" class="flex items-center justify-center" :class="{ 'bg-[#80808080]': route.name === 'home' }">
         <img class="w-5.25 h-5.25" :src="home" alt="sidebar home">
       </router-link>
@@ -43,10 +46,6 @@ const route = useRoute();
         <img class="w-5.25 h-5.25" :src="send" alt="sidebar deliveries">
       </router-link>
     </aside>
-
-    <main class="bg-[#F5F5F5] flex-1 min-h-[calc(100dvh-92px)]">
-      <router-view />
-    </main>
   </div>
 </template>
 

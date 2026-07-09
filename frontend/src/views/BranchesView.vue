@@ -50,16 +50,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="py-18.5 px-24 h-full flex flex-col">
-    <BranchesDropdown class="mb-7 flex justify-end" @cur-selected="branchesDropdownEmitHandler"
+  <div class="p-5 h-full flex flex-col">
+    <BranchesDropdown class="mb-5 flex justify-end" @cur-selected="branchesDropdownEmitHandler"
       :default-value="curSelectedBranch" />
-    <div class="grid grid-cols-2 gap-x-10.75 gap-y-10.5 grow">
+    <div class="grid grid-cols-2 gap-5 grow">
       <StaticTable v-if="!branchLowestStocksLoading" title="Low Stocks" :content="translatedBranchLowestStock"
         class="grid-cols-2" table-color="#EF2D56" :maximum="4" />
-      <StaticTable v-if="!branchLoading" title="Stocks" :content="translatedBranch" class="grid-cols-2 row-span-2"
-        :maximum="10" table-color="#0CCE6B" />
       <StaticTable v-if="!branchDeliveriesLoading" title="Deliveries" :content="translatedDeliveries"
         class="grid-cols-3" table-color="#ED7D3A" :maximum="4" />
+      <StaticTable v-if="!branchLoading" title="Stocks" :content="translatedBranch" class="grid-cols-2 col-span-2"
+        :maximum="10" table-color="#0CCE6B" />
     </div>
   </div>
 </template>
