@@ -5,7 +5,7 @@ export function useMedicineRecords() {
   const medicineRecords = ref([]);
   const pagination = ref({});
   const isLoading = ref(false);
-  const error = ref<Error|string|null>(null);
+  const error = ref<Error | string | null>(null);
 
   const fetchMedicineRecords = async (page: number, limit: number, medicineName: string) => {
     isLoading.value = true;
@@ -31,7 +31,7 @@ export function useMedicineRecords() {
 export function useMedicineRecord() {
   const medicineRecord = ref({});
   const isLoading = ref(false);
-  const error = ref<Error|string|null>(null);
+  const error = ref<Error | string | null>(null);
 
   const fetchMedicineRecord = async (id: string) => {
     isLoading.value = true;

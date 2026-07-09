@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import BranchesDropdown from './BranchesDropdown.vue';
 import InteractiveTable from './InteractiveTable.vue';
-import { useCreateDelivery } from '@/composables/useDelivery.ts';
+import { useDeliveries } from '@/composables/useDelivery.ts';
 import { useMedicineRecords } from '@/composables/useMedicine.ts';
 
 defineProps({
@@ -22,7 +22,7 @@ const curPage = ref(1);
 let isFirst = true;
 let stockName = [];
 
-const { isLoading: createDeliveryLoading, error: createDeliveryError, createDelivery } = useCreateDelivery();
+const { isLoading: createDeliveryLoading, error: createDeliveryError, createDelivery } = useDeliveries();
 const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineLoading, error: medicineError, fetchMedicineRecords } = useMedicineRecords();
 
 const translatedMedicineRecords = computed(() => {

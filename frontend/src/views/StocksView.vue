@@ -143,7 +143,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-5 h-full">
+  <div class="p-5 h-[calc(100vh-100px)]">
     <InteractiveTable v-if="curSelectedBranch === ''" v-show="!medicineRecordsLoading" table-color="#0CCE6B"
       :interactive-columns="interactiveColumns" :content="translatedMedicineRecords"
       class="grid-cols-3 auto-rows-[9.089%] h-full" :interactive-headers="interactiveColumns" :-row-amt="10"
