@@ -7,26 +7,28 @@ import { useDeliveries } from '@/composables/useDelivery';
 const route = useRoute();
 
 const tooLargeContent = ref(false);
+const deliveryId = computed(() => route.params.deliveryId);
 
-const { deliveries: delivery, isLoading, error, fetchDelivery } = useDeliveries();
+const { deliveries: delivery, isLoading, error, fetchDelivery, patchDelivery } = useDeliveries();
+const updatedDelivery = ref({delivered: true, dateDelivered: new Date()});
 
 const translatedDelivery = computed(() => {
   if (delivery.value.length === 0) {
     return { "Stock Name": [], Amount: [] };
   }
-  return { "Stock Name": delivery.value[0].stocksRequested.map(stockRequested => stockRequested.stockName), Amount: [] };
+  return { "Stock Name": delivery.value[0].stocksRequested.map(stockRequested => stockRequested.name), Amount: [] };
 });
 
 const handle = (_: string) => { };
 
 watch(delivery, newDelivery => {
-  if (newDelivery[0].stocksyuested.length > 10) {
+  if (newDelivery[0].stocksRequested.length > 10) {
     tooLargeContent.value = true;
   }
 });
 
 onMounted(() => {
-  fetchDelivery(route.params.deliveryId);
+  fetchDelivery(deliveryId.value);
 });
 </script>
 
@@ -37,9 +39,10 @@ onMounted(() => {
       :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
       :next-page-i="10">
       <template v-for="(_, i) in translatedDelivery['Stock Name']" #[`row-${i}`]>
-        hello
+        <input type="number" />
       </template>
     </InteractiveTable>
+    <button @click="patchDelivery(deliveryId)">submit</button>
   </div>
 </template>
 

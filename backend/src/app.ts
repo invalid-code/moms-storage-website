@@ -1,14 +1,14 @@
 import express, { type Application } from 'express';
 import cors from 'cors';
-import itemRoutes from './routes/itemRoutes';
-import branchRoutes from './routes/branchRoutes';
-import deliveryRoutes from './routes/deliveryRoutes';
-import { errorHandler } from './middlewares/errorHandler';
+import itemRoutes from './routes/medicineRoutes.js';
+import branchRoutes from './routes/branchRoutes.js';
+import deliveryRoutes from './routes/deliveryRoutes.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 
 const app: Application = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));

@@ -1,11 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 import * as deliveryService from '../services/deliveryService.js';
+import type { CreateDeliveryDTO, CreateDeliveryRespDTO, GetDeliveriesRespDTO, GetDeliveriesRouteQueries, GetDeliveryRespDTO, GetDeliveryRouteParams, StocksReceivedDTO, UpdateDeliveryRespDTO, UpdateDeliverySelectivelyDTO, UpdateDeliverySelectivelyRouteParams } from '../types/index.js';
 
-export const getDeliveries = async (req: Request, res: Response, next: NextFunction) => {
+export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQueries>, res: Response<GetDeliveriesRespDTO>, next: NextFunction) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const reqPage = req.query.page;
+    const reqLimit = req.query.limit;
+
+    const page = reqPage != undefined ? parseInt(reqPage.toString()) : 1;
+    const limit = reqLimit != undefined ? parseInt(reqLimit.toString()) : 10;
 
     const { data, totalItems } = await deliveryService.getAllDeliveries(page, limit);
     const totalPages = Math.ceil(totalItems / limit);
@@ -20,11 +24,14 @@ export const getDeliveries = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-export const getDelivery = async (req: Request, res: Response, next: NextFunction) => {
+export const getDelivery = async (req: Request<GetDeliveryRouteParams, {}, {}>, res: Response<GetDeliveryRespDTO>, next: NextFunction) => {
   try {
     const { id } = req.params;
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
 
-    const data = await deliveryService.getDelivery(id);
+    const data = await deliveryService.getDelivery(new ObjectId(id));
 
     res.status(200).json({
       success: true,
@@ -35,23 +42,36 @@ export const getDelivery = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const createDelivery = async (req: Request, res: Response, next: NextFunction) => {
+export const createDelivery = async (req: Request<{}, {}, CreateDeliveryDTO>, res: Response<CreateDeliveryRespDTO>, next: NextFunction) => {
   try {
     const { branchId, stocksRequested } = req.body;
-    await deliveryService.createDeliveryOrder(branchId, stocksRequested);
+
+    if (!(ObjectId.isValid(branchId) && stocksRequested.filter(stockRequestedId => !ObjectId.isValid(stockRequestedId)).length === 0)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+    await deliveryService.createDeliveryOrder(new ObjectId(branchId), stocksRequested.map(stockRequestedId => new ObjectId(stockRequestedId)));
+
     res.status(201).json({ success: true, message: "New delivery was ordered" });
   } catch (err) {
     next(err);
   }
 };
 
-export const updateDelivery = async (req: Request, res: Response, next: NextFunction) => {
+export const updateDelivery = async (req: Request<UpdateDeliverySelectivelyRouteParams, {}, UpdateDeliverySelectivelyDTO>, res: Response<UpdateDeliveryRespDTO>, next: NextFunction) => {
   try {
+    let updatedDelivery = req.body;
+
     const { id } = req.params;
-    if (!ObjectId.isValid(id)) {
+    if (!(ObjectId.isValid(id) && updatedDelivery.stocksReceived.filter(stockReceived => !ObjectId.isValid(stockReceived.stockId)).length === 0)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
-    const updatedData = await deliveryService.processDeliveryUpdate(id, req.body);
+
+    updatedDelivery.stocksReceived = updatedDelivery.stocksReceived.map<StocksReceivedDTO>(stockRequested => ({
+      stockId: new ObjectId(stockRequested.stockId),
+      amount: parseInt(stockRequested.amount.toString()),
+    }));
+    const updatedData = await deliveryService.processDeliveryUpdate(new ObjectId(id), updatedDelivery);
+
     res.status(200).json({ success: true, data: updatedData });
   } catch (err) {
     next(err);

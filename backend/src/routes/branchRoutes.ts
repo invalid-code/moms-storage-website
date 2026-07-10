@@ -5,7 +5,7 @@ import {
   getBranchStocksById, 
   getSingleStockInBranch, 
   getBranchLowestStockById 
-} from '../controllers/branchController';
+} from '../controllers/branchController.js';
 
 const router = Router();
 

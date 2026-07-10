@@ -1,4 +1,5 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
+import type { BranchDocument, DeliveryDocument, MedicineDocument } from '../types/index.js';
 
 const uri = process.env.MONGO_DB_CONN_STR;
 if (!uri) {
@@ -23,6 +24,6 @@ export const connectDB = async () => {
 };
 
 const medicineDb = client.db("medicine");
-export const medicineCollection = medicineDb.collection("medicine");
-export const branchCollection = medicineDb.collection("branches");
-export const deliveryCollection = medicineDb.collection("deliveries");
+export const medicineCollection = medicineDb.collection<MedicineDocument>("medicine");
+export const branchCollection = medicineDb.collection<BranchDocument>("branches");
+export const deliveryCollection = medicineDb.collection<DeliveryDocument>("deliveries");

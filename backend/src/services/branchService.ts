@@ -1,12 +1,13 @@
 import { ObjectId } from 'mongodb';
-import { branchCollection } from '../config/db';
+import { branchCollection } from '../config/db.js';
+import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetGlobalLowestStocksDTO, GetSpecificBranchStockDTO } from '../types/index.js';
 
 export const getAllBranches = async () => {
   return await branchCollection.find({}).toArray();
 };
 
-export const getGlobalLowestStock = async () => {
-  return await branchCollection.aggregate([
+export const getGlobalLowestStocks = async () => {
+  return await branchCollection.aggregate<GetGlobalLowestStocksDTO>([
     { $unwind: "$stocks" },
     {
       $lookup: {
@@ -61,7 +62,7 @@ export const getGlobalLowestStock = async () => {
   ]).toArray();
 };
 
-export const getBranchStocks = async (id: string, options: { page: number; limit: number; stockName?: string; stockQuantity?: number }) => {
+export const getBranchStocks = async (id: ObjectId, options: { page: number; limit: number; stockName?: string; stockQuantity?: number }) => {
   const { page, limit, stockName, stockQuantity } = options;
   const skip = (page - 1) * limit;
 
@@ -71,7 +72,7 @@ export const getBranchStocks = async (id: string, options: { page: number; limit
   const percentageMatch = stockQuantity !== undefined ? [{ $match: { percentage: { $lte: stockQuantity } } }] : [];
 
   const pipeline: any[] = [
-    { $match: { _id: new ObjectId(id) } },
+    { $match: { _id: id } },
     { $unwind: "$stocks" },
     {
       $lookup: {
@@ -119,14 +120,14 @@ export const getBranchStocks = async (id: string, options: { page: number; limit
     }
   ];
 
-  const result = await branchCollection.aggregate(pipeline).toArray();
+  const result = await branchCollection.aggregate<GetBranchStocksDTO>(pipeline).toArray();
   return {
     data: result[0]?.data || [],
     totalItems: result[0]?.metadata[0]?.total || 0
   };
 };
 
-export const getSpecificBranchStock = async (branchId: string, stockId: string) => {
+export const getSpecificBranchStock = async (branchId: ObjectId, stockId: ObjectId) => {
   const pipeline = [
     { $match: { _id: new ObjectId(branchId) } },
     { $unwind: "$stocks" },
@@ -149,13 +150,13 @@ export const getSpecificBranchStock = async (branchId: string, stockId: string) 
       }
     }
   ];
-  return await branchCollection.aggregate(pipeline).toArray();
+  return await branchCollection.aggregate<GetSpecificBranchStockDTO>(pipeline).toArray();
 };
 
-export const getBranchLowestStock = async (id: string, page: number, limit: number) => {
+export const getBranchLowestStocks = async (id: ObjectId, page: number, limit: number) => {
   const skip = (page - 1) * limit;
   const pipeline = [
-    { $match: { _id: new ObjectId(id) } },
+    { $match: { _id: id } },
     { $unwind: "$stocks" },
     {
       $lookup: {
@@ -200,7 +201,7 @@ export const getBranchLowestStock = async (id: string, page: number, limit: numb
     }
   ];
 
-  const result = await branchCollection.aggregate(pipeline).toArray();
+  const result = await branchCollection.aggregate<GetBranchLowestStocksDTO>(pipeline).toArray();
   return {
     data: result[0]?.data || [],
     totalItems: result[0]?.metadata[0]?.total || 0

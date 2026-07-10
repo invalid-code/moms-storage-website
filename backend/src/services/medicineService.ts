@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
-import { medicineCollection } from '../config/db';
+import { medicineCollection } from '../config/db.js';
+import type { GetMedicinesDTO } from '../types/index.js';
 
-export const getPaginatedItems = async (page: number, limit: number, stockName?: string) => {
+export const getPaginatedMedicines = async (page: number, limit: number, stockName?: string) => {
   const skip = (page - 1) * limit;
   const matchStage: any = {};
 
@@ -9,7 +10,7 @@ export const getPaginatedItems = async (page: number, limit: number, stockName?:
     matchStage.name = { $regex: stockName, $options: 'i' };
   }
 
-  const aggregationResult = await medicineCollection.aggregate([
+  const aggregationResult = await medicineCollection.aggregate<GetMedicinesDTO>([
     { $match: matchStage },
     {
       $facet: {
@@ -25,6 +26,6 @@ export const getPaginatedItems = async (page: number, limit: number, stockName?:
   return { data, totalItems };
 };
 
-export const getItemById = async (id: string) => {
-  return await medicineCollection.findOne({ _id: new ObjectId(id) });
+export const getMedicineById = async (id: ObjectId) => {
+  return await medicineCollection.findOne({ _id: id });
 };
