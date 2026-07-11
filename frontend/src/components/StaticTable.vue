@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import checked from "../assets/checked.png";
+import hourGlass from "../assets/hour-glass.png";
 
 const props = defineProps({
   "title": {
@@ -47,7 +49,17 @@ const colSpanClass = computed(() => {
       <template v-else>
         <div class="text-[9px] flex justify-center items-center border-(--tableColor)"
           :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0, 'border-r': Object.keys(content).length > 1 }"
-          :style="{ '--tableColor': tableColor }">{{ firstColContent }}</div>
+          :style="{ '--tableColor': tableColor }">
+          <template v-if="firstColContent === 'Pending'">
+            <img class="w-4 h-4" :src="checked" alt="">
+          </template>
+          <template v-else-if="firstColContent === 'Delivered'">
+            <img class="w-4 h-4" :src="hourGlass" alt="">
+          </template>
+          <template v-else>
+            {{ firstColContent }}
+          </template>
+        </div>
         <div v-for="header, j in Object.keys(content).slice(1)"
           class="text-[9px] flex justify-center items-center border-(--tableColor)"
           :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0, 'border-r': (j + 2) % columnAmt != 0 }"

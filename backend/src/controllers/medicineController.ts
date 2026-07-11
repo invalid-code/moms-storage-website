@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 import * as medicineService from '../services/medicineService.js';
-import type { GetMedicineRespDTO, GetMedicineRouteParams, GetMedicinesQueryParams, GetMedicinesRespDTO } from '../types/index.js';
+import type { GetMedicineRespDTO, GetMedicineRouteParams, GetMedicinesQueryParams, GetMedicinesRespDTO } from '@my-app/types/index.js';
 
 export const getMedicines = async (req: Request<{}, {}, {}, GetMedicinesQueryParams>, res: Response<GetMedicinesRespDTO>, next: NextFunction) => {
   try {

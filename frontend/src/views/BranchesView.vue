@@ -27,7 +27,7 @@ const translatedBranch = computed(() => {
 
 const translatedDeliveries = computed(() => {
   return {
-    "Delivery Status": branchDeliveries.value.map(branchDelivery => branchDelivery.delivered ? "Delivered" : "Pending"),
+    "": branchDeliveries.value.map(branchDelivery => branchDelivery.delivered ? "Delivered" : "Pending"),
     "Date Requested": branchDeliveries.value.map(branchDelivery => new Date(branchDelivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
     "Date Received": branchDeliveries.value.map(branchDelivery => new Date(branchDelivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
   }

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as branchService from '../services/branchService.js';
-import type { GetBranchLowestStockByIdRespDTO, GetBranchLowestStockByIdRouteParams, GetBranchLowestStockByIdRouteQueries, GetBranchStocksByIdRespDTO, GetBranchStocksByIdRouteParams, GetLowestStockOverviewRespDTO, GetSingleStockInBranchRespDTO, GetSingleStockInBranchRouteParams } from '../types/index.js';
+import type { GetBranchLowestStockByIdRespDTO, GetBranchLowestStockByIdRouteParams, GetBranchLowestStockByIdRouteQueries, GetBranchStocksByIdRespDTO, GetBranchStocksByIdRouteParams, GetLowestStockOverviewRespDTO, GetSingleStockInBranchRespDTO, GetSingleStockInBranchRouteParams } from '@my-app/types/index.js';
 import { ObjectId } from 'mongodb';
 
 export const getBranches = async (req: Request, res: Response, next: NextFunction) => {

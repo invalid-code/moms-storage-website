@@ -1,0 +1,12 @@
+{
+  "name": "moms-storage-website",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "overrides": {
+    "mongodb": "7.2.0"
+  }
+}

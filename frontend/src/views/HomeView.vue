@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import search from '../assets/search.png';
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
+import checked from '../assets/checked.png';
+import deliveryTruckBlack from '../assets/delivery_truck_black.png';
+import paperAirplaneBlack from '../assets/paper_airplane_black.png';
 import InfoCard from '@/components/InfoCard.vue';
 import StockCard from '@/components/StockCard.vue';
 import { useBranch, useBranchesLowestStocks } from '@/composables/useBranch';
@@ -78,14 +81,7 @@ onMounted(() => {
   fetchMedicineRecords(curPage.value, medicineRecordsCnt, "");
   fetchDeliveries(1, 3);
   fetchBranchesLowestStocks();
-});
 
-watch(curPage, (newPage) => {
-  if (curSelectedBranch.value === "") {
-    fetchMedicineRecords(newPage, medicineRecordsCnt, stockSearch.value);
-  } else {
-    fetchBranch(curSelectedBranch.value, curPage.value, medicineRecordsCnt, stockSearch.value, selectedStockQuantity.value);
-  }
 });
 </script>
 
@@ -96,23 +92,36 @@ watch(curPage, (newPage) => {
         <div class="flex items-center px-4.75 pt-5">
           <div class="w-2 h-2 bg-red-600 rounded-[50%]"></div>
           <p class="text-[12px] whitespace-nowrap ml-3.75">{{ branchStock["stock-name"] }}</p>
-          <div class="text-[9px]">{{ branchStock.branch }}</div>
+          <div class="ml-auto text-[9px]">{{ branchStock.branch }}</div>
         </div>
       </template>
     </InfoCard>
     <InfoCard v-show="!deliveriesLoading" title="Delivery Status" table-color="#ED7D3A">
       <template v-for="(delivery, i) in deliveries" #[`row-${i}`]>
-        <div>
-          <h1 class="text-[30px] whitespace-nowrap px-7.25 pt-[16.66px]">{{ delivery.branchDetails.name.toUpperCase()
-            }}</h1>
-        </div>
-        <div class="text-[20px] px-7.25">
-          <template v-if="delivery.delivered">Delivered</template>
-          <template v-else>Pending</template>
+        <div class="flex h-7.5 py-2.5 px-1.25 items-center">
+          <img class="max-h-2.25 mr-1.5" :src="checked" alt="delivered" />
+          <p class="text-[10px]">
+            {{ delivery.branchDetails.name }}
+          </p>
+          <div class="flex flex-col ml-auto">
+            <div class="flex">
+              <img :src="deliveryTruckBlack" class="max-h-3" alt="delivery date requested icon" />
+              <p class="text-[6px]">
+                {{ new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) }}
+              </p>
+            </div>
+            <div v-if="delivery.delivered" class="flex">
+              <img :src="paperAirplaneBlack" class="max-h-3" alt="delivery date received icon" />
+              <p class="text-[6px]">
+                {{ new Date(delivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) }}
+              </p>
+            </div>
+          </div>
         </div>
       </template>
     </InfoCard>
     <div class="bg-white col-span-2 rounded-[25px] overflow-hidden p-5">
+      <div>Filters</div>
       <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
         <template v-if="curSelectedBranch === ''">
           <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"

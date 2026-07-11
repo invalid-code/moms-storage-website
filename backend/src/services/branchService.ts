@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { branchCollection } from '../config/db.js';
-import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetGlobalLowestStocksDTO, GetSpecificBranchStockDTO } from '../types/index.js';
+import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetGlobalLowestStocksDTO, GetSpecificBranchStockDTO } from '@my-app/types/index.js';
 
 export const getAllBranches = async () => {
   return await branchCollection.find({}).toArray();

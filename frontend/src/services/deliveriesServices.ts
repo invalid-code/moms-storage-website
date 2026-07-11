@@ -8,7 +8,7 @@ export const deliveryService = {
     return http(`/delivery/${deliveryId}`, { method: "GET" });
   },
   async getBranchDeliveries(branchId: string, page: number, limit: number) {
-    return http(`/delivery/${branchId}?page=${page}&limit=${limit}`, { method: "GET" });
+    return http(`/delivery/branch/${branchId}?page=${page}&limit=${limit}`, { method: "GET" });
   },
   async createDelivery(data) {
     return http(`/delivery`, {
