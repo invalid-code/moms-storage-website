@@ -1,6 +1,6 @@
 import { branchService } from "@/services/branchesServices";
 import { ref } from "vue";
-import type { GenericPaginationDTO, GetBranchLowestStockDTO, GetBranchStockDTO, GetGlobalLowestStocksDTO, GetSingleStockInBranchRespDTO } from "@my-app/types";
+import type { GenericPaginationDTO, GetBranchesLowestStocksDTO, GetBranchLowestStocksItemDTO, GetBranchStockItemDTO, GetBranchStockRespDTO } from "@my-app/types";
 
 export function useBranches() {
   const branches = ref([]);
@@ -27,7 +27,7 @@ export function useBranches() {
 }
 
 export function useBranchesLowestStocks() {
-  const branchesLowestStocks = ref<GetGlobalLowestStocksDTO[]>([]);
+  const branchesLowestStocks = ref<GetBranchesLowestStocksDTO[]>([]);
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
@@ -52,7 +52,7 @@ export function useBranchesLowestStocks() {
 }
 
 export function useBranch() {
-  const branch = ref<GetBranchStockDTO[]>([]);
+  const branch = ref<GetBranchStockItemDTO[]>([]);
   const pagination = ref<GenericPaginationDTO>({
     currentPage: 0,
     hasNextPage: false,
@@ -86,7 +86,7 @@ export function useBranch() {
 }
 
 export function useBranchStock() {
-  const branchStock = ref<GetSingleStockInBranchRespDTO>({
+  const branchStock = ref<GetBranchStockRespDTO>({
     success: false,
   });
   const isLoading = ref(false);
@@ -112,7 +112,7 @@ export function useBranchStock() {
 }
 
 export function useBranchLowestStocks() {
-  const branchLowestStocks = ref<GetBranchLowestStockDTO[]>([]);
+  const branchLowestStocks = ref<GetBranchLowestStocksItemDTO[]>([]);
   const pagination = ref<GenericPaginationDTO>({
     currentPage: 0,
     hasNextPage: false,

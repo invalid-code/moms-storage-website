@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import * as deliveryService from '../services/deliveryService.js';
 import type { CreateDeliveryDTO, CreateDeliveryRespDTO, GetDeliveriesRespDTO, GetDeliveriesRouteQueries, GetDeliveryRespDTO, GetDeliveryRouteParams, StocksReceivedDTO, UpdateDeliveryRespDTO, UpdateDeliverySelectivelyDTO, UpdateDeliverySelectivelyRouteParams } from '@my-app/types/index.js';
 
-export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQueries>, res: Response<GetDeliveriesRespDTO>, next: NextFunction) => {
+export const getDeliveriesController = async (req: Request<{}, {}, {}, GetDeliveriesRouteQueries>, res: Response<GetDeliveriesRespDTO>, next: NextFunction) => {
   try {
     const reqPage = req.query.page;
     const reqLimit = req.query.limit;
@@ -12,7 +12,7 @@ export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQ
     const page = reqPage != undefined ? parseInt(reqPage.toString()) : 1;
     const limit = reqLimit != undefined ? parseInt(reqLimit.toString()) : 10;
 
-    const { data, totalItems } = await deliveryService.getAllDeliveries(page, limit, branchId);
+    const { data, totalItems } = await deliveryService.getDeliveriesService(page, limit, branchId);
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -25,14 +25,14 @@ export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQ
   }
 };
 
-export const getDelivery = async (req: Request<GetDeliveryRouteParams, {}, {}>, res: Response<GetDeliveryRespDTO>, next: NextFunction) => {
+export const getDeliveryController = async (req: Request<GetDeliveryRouteParams, {}, {}>, res: Response<GetDeliveryRespDTO>, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    const data = await deliveryService.getDelivery(new ObjectId(id));
+    const data = await deliveryService.getDeliveryService(new ObjectId(id));
 
     res.status(200).json({
       success: true,
@@ -43,14 +43,14 @@ export const getDelivery = async (req: Request<GetDeliveryRouteParams, {}, {}>, 
   }
 };
 
-export const createDelivery = async (req: Request<{}, {}, CreateDeliveryDTO>, res: Response<CreateDeliveryRespDTO>, next: NextFunction) => {
+export const createDeliveryController = async (req: Request<{}, {}, CreateDeliveryDTO>, res: Response<CreateDeliveryRespDTO>, next: NextFunction) => {
   try {
     const { branchId, stocksRequested } = req.body;
 
     if (!(ObjectId.isValid(branchId) && stocksRequested.filter(stockRequestedId => !ObjectId.isValid(stockRequestedId)).length === 0)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
-    await deliveryService.createDeliveryOrder(new ObjectId(branchId), stocksRequested.map(stockRequestedId => new ObjectId(stockRequestedId)));
+    await deliveryService.createDeliveryService(new ObjectId(branchId), stocksRequested.map(stockRequestedId => new ObjectId(stockRequestedId)));
 
     res.status(201).json({ success: true, message: "New delivery was ordered" });
   } catch (err) {
@@ -58,7 +58,7 @@ export const createDelivery = async (req: Request<{}, {}, CreateDeliveryDTO>, re
   }
 };
 
-export const updateDelivery = async (req: Request<UpdateDeliverySelectivelyRouteParams, {}, UpdateDeliverySelectivelyDTO>, res: Response<UpdateDeliveryRespDTO>, next: NextFunction) => {
+export const updateDeliveryController = async (req: Request<UpdateDeliverySelectivelyRouteParams, {}, UpdateDeliverySelectivelyDTO>, res: Response<UpdateDeliveryRespDTO>, next: NextFunction) => {
   try {
     let updatedDelivery = req.body;
 
@@ -71,7 +71,7 @@ export const updateDelivery = async (req: Request<UpdateDeliverySelectivelyRoute
       stockId: new ObjectId(stockRequested.stockId),
       amount: parseInt(stockRequested.amount.toString()),
     }));
-    const updatedData = await deliveryService.processDeliveryUpdate(new ObjectId(id), updatedDelivery);
+    const updatedData = await deliveryService.updateDeliveryService(new ObjectId(id), updatedDelivery);
 
     res.status(200).json({ success: true, data: updatedData });
   } catch (err) {

@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { deliveryCollection, branchCollection } from '../config/db.js';
 import type { DeliveryDocument, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from '@my-app/types/index.js';
 
-export const getAllDeliveries = async (page: number, limit: number, branchId?: ObjectId) => {
+export const getDeliveriesService = async (page: number, limit: number, branchId?: ObjectId) => {
   const branchIdMatch = branchId !== undefined ? [{ $match: { branch: branchId } }] : [];
   const skip = (page - 1) * limit;
   const pipeline = [
@@ -29,7 +29,7 @@ export const getAllDeliveries = async (page: number, limit: number, branchId?: O
   return { data, totalItems };
 };
 
-export const getDelivery = async (id: ObjectId) => {
+export const getDeliveryService = async (id: ObjectId) => {
   const data = await deliveryCollection.aggregate<GetDeliveryDTO>([
     {
       $match: { _id: id }
@@ -47,7 +47,7 @@ export const getDelivery = async (id: ObjectId) => {
   return data.length > 0 ? data[0] : null;
 };
 
-export const createDeliveryOrder = async (branchId: ObjectId, stocksRequested: ObjectId[]) => {
+export const createDeliveryService = async (branchId: ObjectId, stocksRequested: ObjectId[]) => {
   const newDelivery: DeliveryDocument = {
     dateRequested: new Date(),
     delivered: false,
@@ -60,7 +60,7 @@ export const createDeliveryOrder = async (branchId: ObjectId, stocksRequested: O
   return status;
 };
 
-export const processDeliveryUpdate = async (id: ObjectId, body: UpdateDeliverySelectivelyDTO) => {
+export const updateDeliveryService = async (id: ObjectId, body: UpdateDeliverySelectivelyDTO) => {
   const delivery = await deliveryCollection.findOne({ _id: id });
   if (!delivery) throw new Error("Delivery not found");
 

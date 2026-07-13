@@ -1,36 +1,36 @@
 import type { ObjectId } from "mongodb";
 import type { GenericPaginationDTO } from "./common.js";
 
-export interface GetBranchStocksByIdRouteParams {
+export interface GetBranchStocksRouteParameters {
     id: ObjectId;
 }
 
-export interface GetBranchLowestStockByIdRouteParams {
+export interface GetBranchLowestStocksRouteParams {
     id: ObjectId;
 }
 
-export interface GetSingleStockInBranchRouteParams {
+export interface GetBranchStockRouteParams {
     branchId: ObjectId;
     stockId: ObjectId;
 }
 
-export interface GetBranchLowestStockByIdRouteQueries {
+export interface GetBranchLowestStocksRouteQueries {
     page?: number;
     limit?: number;
     stockName?: string;
     stockQuantity?: number;
 }
 
-export interface GetSpecificBranchStockDTO {
+export interface GetBranchStockDTO {
     stock_name: string;
     stock_id: ObjectId;
     stock_onhold_amount: number;
 }
 
-export interface GetBranchStockDTO {
+export interface GetBranchStockItemDTO {
     "stock-id": ObjectId; 
     "stock-name": string;
-    stock_onhold_amount: string;
+    stock_onhold_amount: number;
     percentage: number;
 }
 
@@ -39,7 +39,7 @@ export interface GetBranchStocksMetadataDTO {
 }
 
 export interface GetBranchStocksDTO {
-    data: GetBranchStockDTO[];
+    data: GetBranchStockItemDTO[];
     metadata: GetBranchStocksMetadataDTO[];
 }
 
@@ -49,7 +49,7 @@ export interface GetBranchesLowestStockDTO {
     "stock-percentage": string;
 }
 
-export interface GetBranchLowestStockDTO {
+export interface GetBranchLowestStocksItemDTO {
     "stock-name": string;
     stock_onhold_amount: string;
 }
@@ -58,38 +58,38 @@ export interface GetBranchLowestStocksMetadataDTO {
     total: number;
 }
 
-export interface GetBranchesLowestStocksDTO {
-    data: GetBranchLowestStockDTO[];
+export interface GetBranchLowestStocksDTO {
+    data: GetBranchLowestStocksItemDTO[];
     metadata: GetBranchLowestStocksMetadataDTO[];
 }
 
-export interface GetGlobalLowestStocksDTO {
+export interface GetBranchesLowestStocksDTO {
     "stock-name": string;
     branch: string;
     "stock-percentage": string;
 }
 
-export interface GetSingleStockInBranchRespDTO {
+export interface GetBranchStockRespDTO {
     success: boolean;
-    data?: GetSpecificBranchStockDTO | undefined;
+    data?: GetBranchStockDTO | undefined;
     message?: string;
 }
 
-export interface GetBranchStocksByIdRespDTO {
+export interface GetBranchStocksRespDTO {
     success: boolean;
-    data?: GetBranchStockDTO[];
+    data?: GetBranchStockItemDTO[];
     pagination?: GenericPaginationDTO;
     message?: string;
 }
 
 export interface GetBranchLowestStocksRespDTO {
     success: boolean;
-    data?: GetBranchLowestStockDTO[];
+    data?: GetBranchLowestStocksItemDTO[];
     pagination?: GenericPaginationDTO;
     message?: string;
 }
 
-export interface GetLowestStockOverviewRespDTO {
+export interface GetBranchesLowestStocksRespDTO {
     success: boolean;
-    data?: GetGlobalLowestStocksDTO[];
+    data?: GetBranchesLowestStocksDTO[];
 }

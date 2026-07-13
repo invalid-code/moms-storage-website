@@ -1,14 +1,14 @@
 import { Router } from 'express';
-import { getDeliveries, getDelivery, createDelivery, updateDelivery } from '../controllers/deliveryController.js';
+import { getDeliveriesController, getDeliveryController, createDeliveryController, updateDeliveryController } from '../controllers/deliveryController.js';
 
 const router = Router();
 
 router.route('/')
-  .get(getDeliveries)
-  .post(createDelivery);
+  .get(getDeliveriesController)
+  .post(createDeliveryController);
 
 router.route('/:id')
-  .get(getDelivery)
-  .patch(updateDelivery);
+  .get(getDeliveryController)
+  .patch(updateDeliveryController);
 
 export default router;

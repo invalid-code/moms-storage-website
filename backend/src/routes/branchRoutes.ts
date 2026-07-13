@@ -1,18 +1,18 @@
 import { Router } from 'express';
 import { 
-  getBranches, 
-  getLowestStockOverview, 
-  getBranchStocksById, 
-  getSingleStockInBranch, 
-  getBranchLowestStockById 
+  getBranchesController,
+  getBranchStocksController,
+  getBranchLowestStocksController,
+  getBranchStockController,
+  getBranchesLowestStocksController,
 } from '../controllers/branchController.js';
 
 const router = Router();
 
-router.get('/', getBranches);
-router.get('/lowest-stock', getLowestStockOverview);
-router.get('/:id', getBranchStocksById);
-router.get('/:id/lowest-stock', getBranchLowestStockById);
-router.get('/:branchId/stock/:stockId', getSingleStockInBranch);
+router.get('/', getBranchesController);
+router.get('/lowest-stock', getBranchesLowestStocksController);
+router.get('/:id', getBranchStocksController);
+router.get('/:id/lowest-stock', getBranchLowestStocksController);
+router.get('/:branchId/stock/:stockId', getBranchStockController);
 
 export default router;

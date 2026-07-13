@@ -1,27 +1,27 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as branchService from '../services/branchService.js';
-import type { GetBranchLowestStockByIdRespDTO, GetBranchLowestStockByIdRouteParams, GetBranchLowestStockByIdRouteQueries, GetBranchStocksByIdRespDTO, GetBranchStocksByIdRouteParams, GetLowestStockOverviewRespDTO, GetSingleStockInBranchRespDTO, GetSingleStockInBranchRouteParams } from '@my-app/types/index.js';
+import type { GetBranchLowestStocksRouteParams, GetBranchLowestStocksRouteQueries, GetBranchLowestStocksRespDTO, GetBranchStocksRespDTO, GetBranchStocksRouteParameters, GetBranchesLowestStocksRespDTO, GetBranchStockRespDTO, GetBranchStockRouteParams } from '@my-app/types/index.js';
 import { ObjectId } from 'mongodb';
 
-export const getBranches = async (req: Request, res: Response, next: NextFunction) => {
+export const getBranchesController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await branchService.getAllBranches();
+    const data = await branchService.getBranchesService();
     res.status(200).json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-export const getLowestStockOverview = async (req: Request, res: Response<GetLowestStockOverviewRespDTO>, next: NextFunction) => {
+export const getBranchesLowestStocksController = async (req: Request, res: Response<GetBranchesLowestStocksRespDTO>, next: NextFunction) => {
   try {
-    const data = await branchService.getGlobalLowestStocks();
+    const data = await branchService.getBranchesLowestStocksService();
     res.status(200).json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-export const getBranchStocksById = async (req: Request<GetBranchStocksByIdRouteParams, {}, {}, GetBranchLowestStockByIdRouteQueries>, res: Response<GetBranchStocksByIdRespDTO>, next: NextFunction) => {
+export const getBranchStocksController = async (req: Request<GetBranchStocksRouteParameters, {}, {}, GetBranchLowestStocksRouteQueries>, res: Response<GetBranchStocksRespDTO>, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
@@ -37,7 +37,7 @@ export const getBranchStocksById = async (req: Request<GetBranchStocksByIdRouteP
     const stockName = req.query.stockName || "";
     const stockQuantity = req.query.stockQuantity ? parseFloat(req.query.stockQuantity.toString()) : 100;
 
-    const { data, totalItems } = await branchService.getBranchStocks(new ObjectId(id), { page, limit, stockName, stockQuantity });
+    const { data, totalItems } = await branchService.getBranchStocksService(new ObjectId(id), { page, limit, stockName, stockQuantity });
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -50,14 +50,14 @@ export const getBranchStocksById = async (req: Request<GetBranchStocksByIdRouteP
   }
 };
 
-export const getSingleStockInBranch = async (req: Request<GetSingleStockInBranchRouteParams>, res: Response<GetSingleStockInBranchRespDTO>, next: NextFunction) => {
+export const getBranchStockController = async (req: Request<GetBranchStockRouteParams>, res: Response<GetBranchStockRespDTO>, next: NextFunction) => {
   try {
     const { branchId, stockId } = req.params;
     if (!(ObjectId.isValid(branchId) && ObjectId.isValid(stockId))) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    const result = await branchService.getSpecificBranchStock(new ObjectId(branchId), new ObjectId(stockId));
+    const result = await branchService.getBranchStockService(new ObjectId(branchId), new ObjectId(stockId));
     if (!result || result.length === 0) {
       return res.status(404).json({ success: false, message: "Branch or specific stock not found." });
     }
@@ -68,7 +68,7 @@ export const getSingleStockInBranch = async (req: Request<GetSingleStockInBranch
   }
 };
 
-export const getBranchLowestStockById = async (req: Request<GetBranchLowestStockByIdRouteParams, {}, {}, GetBranchLowestStockByIdRouteQueries>, res: Response<GetBranchLowestStockByIdRespDTO>, next: NextFunction) => {
+export const getBranchLowestStocksController = async (req: Request<GetBranchLowestStocksRouteParams, {}, {}, GetBranchLowestStocksRouteQueries>, res: Response<GetBranchLowestStocksRespDTO>, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
@@ -81,7 +81,7 @@ export const getBranchLowestStockById = async (req: Request<GetBranchLowestStock
     const page = reqPage != undefined ? parseInt(reqPage.toString()) : 1;
     const limit = reqLimit != undefined ? parseInt(reqLimit.toString()) : 10;
 
-    const { data, totalItems } = await branchService.getBranchLowestStocks(new ObjectId(id), page, limit);
+    const { data, totalItems } = await branchService.getBranchLowestStocksService(new ObjectId(id), page, limit);
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({

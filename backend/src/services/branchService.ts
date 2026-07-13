@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb';
 import { branchCollection } from '../config/db.js';
-import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetGlobalLowestStocksDTO, GetSpecificBranchStockDTO } from '@my-app/types/index.js';
+import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetBranchesLowestStocksDTO, GetBranchStockDTO } from '@my-app/types/index.js';
 
-export const getAllBranches = async () => {
+export const getBranchesService = async () => {
   return await branchCollection.find({}).toArray();
 };
 
-export const getGlobalLowestStocks = async () => {
-  return await branchCollection.aggregate<GetGlobalLowestStocksDTO>([
+export const getBranchesLowestStocksService = async () => {
+  return await branchCollection.aggregate<GetBranchesLowestStocksDTO>([
     { $unwind: "$stocks" },
     {
       $lookup: {
@@ -62,7 +62,7 @@ export const getGlobalLowestStocks = async () => {
   ]).toArray();
 };
 
-export const getBranchStocks = async (id: ObjectId, options: { page: number; limit: number; stockName?: string; stockQuantity?: number }) => {
+export const getBranchStocksService = async (id: ObjectId, options: { page: number; limit: number; stockName?: string; stockQuantity?: number }) => {
   const { page, limit, stockName, stockQuantity } = options;
   const skip = (page - 1) * limit;
 
@@ -127,7 +127,7 @@ export const getBranchStocks = async (id: ObjectId, options: { page: number; lim
   };
 };
 
-export const getSpecificBranchStock = async (branchId: ObjectId, stockId: ObjectId) => {
+export const getBranchStockService = async (branchId: ObjectId, stockId: ObjectId) => {
   const pipeline = [
     { $match: { _id: new ObjectId(branchId) } },
     { $unwind: "$stocks" },
@@ -150,10 +150,10 @@ export const getSpecificBranchStock = async (branchId: ObjectId, stockId: Object
       }
     }
   ];
-  return await branchCollection.aggregate<GetSpecificBranchStockDTO>(pipeline).toArray();
+  return await branchCollection.aggregate<GetBranchStockDTO>(pipeline).toArray();
 };
 
-export const getBranchLowestStocks = async (id: ObjectId, page: number, limit: number) => {
+export const getBranchLowestStocksService = async (id: ObjectId, page: number, limit: number) => {
   const skip = (page - 1) * limit;
   const pipeline = [
     { $match: { _id: id } },
