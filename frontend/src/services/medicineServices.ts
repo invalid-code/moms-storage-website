@@ -1,10 +1,11 @@
 import { http } from "@/helper/requestHelper";
+import type { GetMedicineRespDTO,  GetMedicinesRespDTO } from "@my-app/types";
 
 export const medicineService = {
   async getMedicineRecords(page: number, limit: number, medicineName: string) {
-    return http(`/item?page=${page}&limit=${limit}&stockName=${medicineName}`, { method: "GET"});
+    return http<GetMedicinesRespDTO>(`/item?page=${page}&limit=${limit}&stockName=${medicineName}`, { method: "GET"});
   },
   async getMedicineRecord(id: string) {
-    return http(`/item/${id}`, { method: "GET"});
+    return http<GetMedicineRespDTO>(`/item/${id}`, { method: "GET"});
   }
 };

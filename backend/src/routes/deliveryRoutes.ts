@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDeliveries, getBranchDeliveries, getDelivery, createDelivery, updateDelivery } from '../controllers/deliveryController.js';
+import { getDeliveries, getDelivery, createDelivery, updateDelivery } from '../controllers/deliveryController.js';
 
 const router = Router();
 
@@ -10,8 +10,5 @@ router.route('/')
 router.route('/:id')
   .get(getDelivery)
   .patch(updateDelivery);
-
-router.route('/branch/:id')
-  .get(getBranchDeliveries);
 
 export default router;

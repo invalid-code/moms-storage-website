@@ -2,14 +2,14 @@
 import BranchesDropdown from '@/components/BranchesDropdown.vue';
 import StaticTable from '@/components/StaticTable.vue';
 import { useBranchLowestStocks, useBranch } from '@/composables/useBranch';
-import { useBranchDeliveries } from '@/composables/useDelivery';
+import { useDeliveries } from '@/composables/useDelivery';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const curSelectedBranch = ref("6a22d28e5882d14a0b85c54b"); // todo: when first load get the default selected value
 
 const { branchLowestStocks, isLoading: branchLowestStocksLoading, error: branchLowestStocksError, fetchBranchLowestStocks } = useBranchLowestStocks();
 const { branch, isLoading: branchLoading, error: branchStockError, fetchBranch } = useBranch();
-const { branchDeliveries, isLoading: branchDeliveriesLoading, error: branchDeliveriesError, fetchBranchDeliveries } = useBranchDeliveries();
+const { deliveries, isLoading: branchDeliveriesLoading, error: branchDeliveriesError, fetchDeliveries } = useDeliveries();
 
 const translatedBranchLowestStock = computed(() => {
   return {
@@ -27,9 +27,9 @@ const translatedBranch = computed(() => {
 
 const translatedDeliveries = computed(() => {
   return {
-    "": branchDeliveries.value.map(branchDelivery => branchDelivery.delivered ? "Delivered" : "Pending"),
-    "Date Requested": branchDeliveries.value.map(branchDelivery => new Date(branchDelivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
-    "Date Received": branchDeliveries.value.map(branchDelivery => new Date(branchDelivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
+    "": deliveries.value.map(delivery => delivery.delivered ? "Delivered" : "Pending"),
+    "Date Requested": deliveries.value.map(branchDelivery => new Date(branchDelivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
+    "Date Received": deliveries.value.map(branchDelivery => new Date(branchDelivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })),
   }
 });
 
@@ -40,12 +40,12 @@ const branchesDropdownEmitHandler = (payload: string) => {
 watch(curSelectedBranch, (newSelectedBranch) => {
   fetchBranchLowestStocks(newSelectedBranch, 1, 4);
   fetchBranch(newSelectedBranch, 1, 10, "", null);
-  fetchBranchDeliveries(newSelectedBranch, 1, 4);
+  fetchDeliveries(1, 4, newSelectedBranch);
 });
 onMounted(() => {
   fetchBranchLowestStocks(curSelectedBranch.value, 1, 4);
   fetchBranch(curSelectedBranch.value, 1, 10, "", null);
-  fetchBranchDeliveries(curSelectedBranch.value, 1, 4);
+  fetchDeliveries(1, 4, curSelectedBranch.value);
 });
 </script>
 

@@ -1,17 +1,18 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 import * as deliveryService from '../services/deliveryService.js';
-import type { CreateDeliveryDTO, CreateDeliveryRespDTO, GetBranchDeliveriesRespDTO, GetBranchDeliveriesRouteParams, GetBranchDeliveriesRouteQueries, GetDeliveriesRespDTO, GetDeliveriesRouteQueries, GetDeliveryRespDTO, GetDeliveryRouteParams, StocksReceivedDTO, UpdateDeliveryRespDTO, UpdateDeliverySelectivelyDTO, UpdateDeliverySelectivelyRouteParams } from '@my-app/types/index.js';
+import type { CreateDeliveryDTO, CreateDeliveryRespDTO, GetDeliveriesRespDTO, GetDeliveriesRouteQueries, GetDeliveryRespDTO, GetDeliveryRouteParams, StocksReceivedDTO, UpdateDeliveryRespDTO, UpdateDeliverySelectivelyDTO, UpdateDeliverySelectivelyRouteParams } from '@my-app/types/index.js';
 
 export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQueries>, res: Response<GetDeliveriesRespDTO>, next: NextFunction) => {
   try {
     const reqPage = req.query.page;
     const reqLimit = req.query.limit;
+    const branchId = req.query.branchId ? new ObjectId(req.query.branchId) : undefined;
 
     const page = reqPage != undefined ? parseInt(reqPage.toString()) : 1;
     const limit = reqLimit != undefined ? parseInt(reqLimit.toString()) : 10;
 
-    const { data, totalItems } = await deliveryService.getAllDeliveries(page, limit);
+    const { data, totalItems } = await deliveryService.getAllDeliveries(page, limit, branchId);
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -21,32 +22,6 @@ export const getDeliveries = async (req: Request<{}, {}, {}, GetDeliveriesRouteQ
     });
   } catch (err) {
     next(err);
-  }
-};
-
-export const getBranchDeliveries = async (req: Request<GetBranchDeliveriesRouteParams, {}, {}, GetBranchDeliveriesRouteQueries>, res: Response<GetBranchDeliveriesRespDTO>, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid ID format' });
-    }
-
-    const reqPage = req.query.page;
-    const reqLimit = req.query.limit;
-
-    const page = reqPage != undefined ? parseInt(reqPage.toString()) : 1;
-    const limit = reqLimit != undefined ? parseInt(reqLimit.toString()) : 10;
-
-    const { data, totalItems } = await deliveryService.getBranchDeliveries(new ObjectId(id), page, limit);
-    const totalPages = Math.ceil(totalItems / limit);
-
-    res.status(200).json({
-      success: true,
-      data,
-      pagination: { totalItems, totalPages, currentPage: page, limit, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
-    });
-  } catch (err) {
-    next(err)
   }
 };
 

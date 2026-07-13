@@ -1,9 +1,17 @@
 import { medicineService } from '@/services/medicineServices';
+import type { GenericPaginationDTO, MedicineDocument } from '@my-app/types';
 import { ref } from 'vue';
 
 export function useMedicineRecords() {
-  const medicineRecords = ref([]);
-  const pagination = ref({});
+  const medicineRecords = ref<MedicineDocument[]>([]);
+  const pagination = ref<GenericPaginationDTO>({
+    currentPage: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 0,
+    totalItems: 0,
+    totalPages: 0
+  });
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
@@ -29,7 +37,10 @@ export function useMedicineRecords() {
 }
 
 export function useMedicineRecord() {
-  const medicineRecord = ref({});
+  const medicineRecord = ref<MedicineDocument>({
+    count: 0,
+    name: ""
+  });
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
@@ -37,7 +48,8 @@ export function useMedicineRecord() {
     isLoading.value = true;
     error.value = null;
     try {
-      medicineRecord.value = await medicineService.getMedicineRecord(id);
+      const apiResp = await medicineService.getMedicineRecord(id);
+      medicineRecord.value = apiResp.data;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;

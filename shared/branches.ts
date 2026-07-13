@@ -43,17 +43,22 @@ export interface GetBranchStocksDTO {
     metadata: GetBranchStocksMetadataDTO[];
 }
 
-export interface GetBranchLowestStockDTO {
+export interface GetBranchesLowestStockDTO {
     "stock-name": string;
     branch: string;
     "stock-percentage": string;
+}
+
+export interface GetBranchLowestStockDTO {
+    "stock-name": string;
+    stock_onhold_amount: string;
 }
 
 export interface GetBranchLowestStocksMetadataDTO {
     total: number;
 }
 
-export interface GetBranchLowestStocksDTO {
+export interface GetBranchesLowestStocksDTO {
     data: GetBranchLowestStockDTO[];
     metadata: GetBranchLowestStocksMetadataDTO[];
 }
@@ -77,7 +82,7 @@ export interface GetBranchStocksByIdRespDTO {
     message?: string;
 }
 
-export interface GetBranchLowestStockByIdRespDTO {
+export interface GetBranchLowestStocksRespDTO {
     success: boolean;
     data?: GetBranchLowestStockDTO[];
     pagination?: GenericPaginationDTO;

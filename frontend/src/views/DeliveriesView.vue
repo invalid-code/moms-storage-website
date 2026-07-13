@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import InteractiveTable from '@/components/InteractiveTable.vue';
-import { useDeliveries, usePatchDelivery } from '@/composables/useDelivery';
+import { useDeliveries } from '@/composables/useDelivery';
 import { computed, onMounted, ref, watch } from 'vue';
 
 
@@ -37,7 +37,7 @@ const translatedDeliveries = computed(() => {
 watch(translatedDeliveries, _ => {
   if (isFirst && deliveriesPagination.value.totalItems > 10) {
     tooLargeContent.value = true;
-    fetchDeliveries(curPage.value, 10);
+    fetchDeliveries(curPage.value, 10, '');
     isFirst = false;
   }
 });
@@ -50,11 +50,11 @@ const handle = (_: string) => {
 
 watch(curPage, async (newCurPage) => {
   if (newCurPage < 3) return;
-  fetchDeliveries(newCurPage, 10);
+  fetchDeliveries(newCurPage, 10, '');
 });
 
 onMounted(() => {
-  fetchDeliveries(curPage.value, 10);
+  fetchDeliveries(curPage.value, 10, '');
   curPage.value += 1;
 });
 </script>

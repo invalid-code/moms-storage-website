@@ -2,9 +2,11 @@ import { ObjectId } from 'mongodb';
 import { deliveryCollection, branchCollection } from '../config/db.js';
 import type { DeliveryDocument, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from '@my-app/types/index.js';
 
-export const getAllDeliveries = async (page: number, limit: number) => {
+export const getAllDeliveries = async (page: number, limit: number, branchId?: ObjectId) => {
+  const branchIdMatch = branchId !== undefined ? [{ $match: { branch: branchId } }] : [];
   const skip = (page - 1) * limit;
   const pipeline = [
+    ...branchIdMatch,
     { $sort: { createdAt: -1 } },
     { $skip: skip },
     { $limit: limit },
@@ -21,22 +23,6 @@ export const getAllDeliveries = async (page: number, limit: number) => {
 
   const [data, totalItems] = await Promise.all([
     deliveryCollection.aggregate<GetDeliveriesDTO>(pipeline).toArray(),
-    deliveryCollection.countDocuments()
-  ]);
-
-  return { data, totalItems };
-};
-
-export const getBranchDeliveries = async (branchId: ObjectId, page: number, limit: number) => {
-  const skip = (page - 1) * limit;
-  const pipeline = [
-    { $match: { branch: branchId } },
-    { $skip: skip },
-    { $limit: limit },
-  ];
-
-  const [data, totalItems] = await Promise.all([
-    deliveryCollection.aggregate<DeliveryDocument>(pipeline).toArray(),
     deliveryCollection.countDocuments()
   ]);
 

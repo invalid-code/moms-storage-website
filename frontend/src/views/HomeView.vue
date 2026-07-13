@@ -15,14 +15,12 @@ const curPage = ref(1);
 const stockSearch = ref('');
 const curSelectedBranch = ref("");
 const selectedStockQuantity = ref<number | null>(null);
-const stockQuantityColor = ref("bg-gray-700");
+const stockQuantityColor = ref("text-gray-700");
 const stockQuantityText = ref("All");
 const startingPoint = ref(0);
 let selectedBranch = ref("");
 let medicineRecordsCnt = 4;
-if (window.innerWidth >= 1280) {
-  medicineRecordsCnt = 8;
-}
+const showFilters = ref(false);
 
 const branchesDropdownEmitHandler = (payload: string) => {
   selectedBranch.value = payload;
@@ -31,9 +29,10 @@ const branchesDropdownEmitHandler = (payload: string) => {
 const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
 const { deliveries, pagination: _, isLoading: deliveriesLoading, error: deliveriesError, fetchDeliveries } = useDeliveries();
 const { branchesLowestStocks, isLoading: branchesLowestStocksLoading, error: branchesLowestStocksError, fetchBranchesLowestStocks } = useBranchesLowestStocks();
-const { branch, pagination: branchPagination, isLoading: branchLoading, error: branhcError, fetchBranch } = useBranch();
+const { branch, isLoading: branchLoading, error: branchError, fetchBranch } = useBranch();
 
 const submitFilters = async () => {
+  showFilters.value = false;
   curSelectedBranch.value = selectedBranch.value;
   curPage.value = 1;
   startingPoint.value = 0;
@@ -45,21 +44,24 @@ const submitFilters = async () => {
 };
 
 const selectStockQuantity = () => {
+  if (curSelectedBranch.value === "") {
+    return;
+  }
   if (selectedStockQuantity.value === null) {
     selectedStockQuantity.value = 30;
-    stockQuantityColor.value = "bg-red-600";
+    stockQuantityColor.value = "text-red-600";
     stockQuantityText.value = "Low";
   } else if (selectedStockQuantity.value === 90) {
     selectedStockQuantity.value = null;
-    stockQuantityColor.value = "bg-gray-700";
+    stockQuantityColor.value = "text-gray-700";
     stockQuantityText.value = "All";
   } else {
     selectedStockQuantity.value += 30;
     if (selectedStockQuantity.value === 60) {
-      stockQuantityColor.value = "bg-yellow-400";
+      stockQuantityColor.value = "text-yellow-400";
       stockQuantityText.value = "Half";
     } else {
-      stockQuantityColor.value = "bg-green-700";
+      stockQuantityColor.value = "text-green-700";
       stockQuantityText.value = "Stocked";
     }
   }
@@ -79,7 +81,7 @@ const moveLeft = () => {
 
 onMounted(() => {
   fetchMedicineRecords(curPage.value, medicineRecordsCnt, "");
-  fetchDeliveries(1, 3);
+  fetchDeliveries(1, 3, '');
   fetchBranchesLowestStocks();
 
 });
@@ -107,21 +109,44 @@ onMounted(() => {
             <div class="flex">
               <img :src="deliveryTruckBlack" class="max-h-3" alt="delivery date requested icon" />
               <p class="text-[6px]">
-                {{ new Date(delivery.dateRequested).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) }}
+                {{ new Date(delivery.dateRequested).toLocaleDateString("en-PH", {
+                  year: "numeric", month: "long", day:
+                    "numeric"
+                }) }}
               </p>
             </div>
             <div v-if="delivery.delivered" class="flex">
               <img :src="paperAirplaneBlack" class="max-h-3" alt="delivery date received icon" />
               <p class="text-[6px]">
-                {{ new Date(delivery.dateDelivered).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) }}
+                {{ new Date(delivery.dateDelivered).toLocaleDateString("en-PH", {
+                  year: "numeric", month: "long", day:
+                    "numeric"
+                }) }}
               </p>
             </div>
           </div>
         </div>
       </template>
     </InfoCard>
+    <div class="fixed bg-white p-2.25 rounded-[25px] shadow" :class="{ 'hidden': !showFilters }">
+      <div class="bg-[#373638] p-1.25 rounded-[3px] flex mb-2.25">
+        <input class="bg-[rgba(91,90,94,0.5)] rounded-xs" type="text" v-model="stockSearch">
+        <div class="bg-[rgba(91,90,94,0.5)] rounded-xs ml-1.25 flex justify-center items-center w-[24px]">
+          <img class="h-3.25 w-3.25" :src="search" alt="">
+        </div>
+      </div>
+      <div class="flex mb-2.25">
+        <p :class="stockQuantityColor" @click="selectStockQuantity">{{ stockQuantityText }}</p>
+        <BranchesDropdown class="ml-auto" @cur-selected="branchesDropdownEmitHandler" />
+      </div>
+      <div class="flex justify-center">
+        <button class="bg-[#DCED31] rounded-[5px] px-2.25 py-1.25" @click="showFilters = false">Cancel</button>
+        <button class="bg-[#ED7D3A] rounded-[5px] px-2.25 py-1.25 ml-3.5" @click="submitFilters">Submit</button>
+      </div>
+    </div>
     <div class="bg-white col-span-2 rounded-[25px] overflow-hidden p-5">
-      <div>Filters</div>
+      <div class="flex justify-end items-center mb-1.5 text-[8px] px-2.25 py-1.25" @click="showFilters = true">Filters
+      </div>
       <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
         <template v-if="curSelectedBranch === ''">
           <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"

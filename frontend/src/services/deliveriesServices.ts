@@ -1,25 +1,23 @@
 import { http } from "@/helper/requestHelper";
+import type { CreateDeliveryDTO, CreateDeliveryRespDTO, GetDeliveriesRespDTO, GetDeliveryRespDTO, UpdateDeliveryRespDTO, UpdateDeliverySelectivelyDTO } from "@my-app/types";
 
 export const deliveryService = {
-  async getDeliveries(page: number, limit: number) {
-    return http(`/delivery?page=${page}&limit=${limit}`, { method: "GET" });
+  async getDeliveries(page: number, limit: number, branchId: string) {
+    return http<GetDeliveriesRespDTO>(`/delivery?page=${page}&limit=${limit}&branchId=${branchId}`, { method: "GET" });
   },
   async getDelivery(deliveryId: string) {
-    return http(`/delivery/${deliveryId}`, { method: "GET" });
+    return http<GetDeliveryRespDTO>(`/delivery/${deliveryId}`, { method: "GET" });
   },
-  async getBranchDeliveries(branchId: string, page: number, limit: number) {
-    return http(`/delivery/branch/${branchId}?page=${page}&limit=${limit}`, { method: "GET" });
-  },
-  async createDelivery(data) {
-    return http(`/delivery`, {
+  async createDelivery(data: CreateDeliveryDTO) {
+    return http<CreateDeliveryRespDTO>(`/delivery`, {
       method: "POST", headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(data)
     });
   },
-  async patchDelivery(id: string, data) {
-    return http(`/delivery/${id}`, {
+  async patchDelivery(id: string, data: UpdateDeliverySelectivelyDTO) {
+    return http<UpdateDeliveryRespDTO>(`/delivery/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

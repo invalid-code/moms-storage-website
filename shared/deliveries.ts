@@ -3,10 +3,8 @@ import type { MedicineDocument, BranchDocument, DeliveryDocument } from "./model
 import type { GenericPaginationDTO } from "./common.js";
 
 export interface GetDeliveryRouteParams { id: ObjectId; }
-export interface GetDeliveriesRouteQueries { page?: number; limit?: number; }
+export interface GetDeliveriesRouteQueries { page?: number; limit?: number; branchId?: ObjectId }
 export interface UpdateDeliverySelectivelyRouteParams { id: ObjectId; }
-export interface GetBranchDeliveriesRouteParams { id: ObjectId; }
-export interface GetBranchDeliveriesRouteQueries { page?: number; limit?: number; }
 
 export interface CreateDeliveryDTO {
     branchId: ObjectId;
@@ -35,12 +33,15 @@ export interface GetDeliveryDTO {
 
 export interface GetDeliveriesDTO {
     _id: ObjectId;
-    name: string;
-    stocks: BranchDocument[];
+    dateRequested: Date;
+    dateDelivered: Date;
+    delivered: boolean;
+    stocksRequested: ObjectId[];
+    branch: ObjectId;
+    branchDetails: BranchDocument[];
 }
 
 export interface CreateDeliveryRespDTO { success: boolean; message: string; }
 export interface GetDeliveryRespDTO { success: boolean; data?: GetDeliveryDTO | null | undefined; message?: string; }
 export interface GetDeliveriesRespDTO { success: boolean; data: GetDeliveriesDTO[]; pagination: GenericPaginationDTO; }
 export interface UpdateDeliveryRespDTO { success: boolean; data?: DeliveryDocument | null; message?: string; }
-export interface GetBranchDeliveriesRespDTO { success: boolean; data?: DeliveryDocument[]; message?: string; pagination?: GenericPaginationDTO; }

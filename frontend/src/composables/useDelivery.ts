@@ -1,17 +1,27 @@
+import type { ObjectId } from "mongodb";
 import { deliveryService } from "@/services/deliveriesServices";
+import type { CreateDeliveryDTO, GenericPaginationDTO, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from "@my-app/types";
 import { ref } from "vue";
 
 export function useDeliveries() {
-  const deliveries = ref([]);
-  const pagination = ref({});
+  const deliveries = ref<GetDeliveriesDTO[]>([]);
+  const delivery = ref<GetDeliveryDTO>();
+  const pagination = ref<GenericPaginationDTO>({
+    currentPage: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 0,
+    totalItems: 0,
+    totalPages: 0
+  });
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);
 
-  const fetchDeliveries = async (page: number, limit: number) => {
+  const fetchDeliveries = async (page: number, limit: number, branchId: string) => {
     isLoading.value = true;
     error.value = null;
     try {
-      const apiResp = await deliveryService.getDeliveries(page, limit);
+      const apiResp = await deliveryService.getDeliveries(page, limit, branchId);
       deliveries.value = apiResp.data;
       pagination.value = apiResp.pagination;
     } catch (err) {
@@ -24,13 +34,13 @@ export function useDeliveries() {
       isLoading.value = false;
     }
   };
-  
+
   const fetchDelivery = async (deliveryId: string) => {
     isLoading.value = true;
     error.value = null;
     try {
       const apiResp = await deliveryService.getDelivery(deliveryId);
-      deliveries.value.push(apiResp.data);
+      delivery.value = apiResp.data;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -42,7 +52,7 @@ export function useDeliveries() {
     }
   };
 
-  const createDelivery = async (data) => {
+  const createDelivery = async (data: CreateDeliveryDTO) => {
     isLoading.value = true;
     error.value = null;
     try {
@@ -58,7 +68,7 @@ export function useDeliveries() {
     }
   };
 
-  const patchDelivery = async (id: string, data) => {
+  const patchDelivery = async (id: string, data: UpdateDeliverySelectivelyDTO) => {
     isLoading.value = true;
     error.value = null;
     try {
@@ -74,31 +84,5 @@ export function useDeliveries() {
     }
   };
 
-  return { deliveries, pagination, isLoading, error, fetchDeliveries, fetchDelivery, createDelivery, patchDelivery };
-}
-
-export function useBranchDeliveries() {
-  const branchDeliveries = ref([]);
-  const pagination = ref({});
-  const isLoading = ref(false);
-  const error = ref<Error | string | null>(null);
-  const fetchBranchDeliveries = async (branchId: string, page: number, limit: number) => {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      const apiResp = await deliveryService.getBranchDeliveries(branchId, page, limit);
-      branchDeliveries.value = apiResp.data;
-      pagination.value = apiResp.pagination;
-    } catch (err) {
-      if (err instanceof Error) {
-        error.value = err.message;
-      } else {
-        error.value = `An unexpected error occurred: ${err}`;
-      }
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  return { branchDeliveries, pagination, isLoading, error, fetchBranchDeliveries };
+  return { deliveries, delivery, pagination, isLoading, error, fetchDeliveries, fetchDelivery, createDelivery, patchDelivery };
 }
