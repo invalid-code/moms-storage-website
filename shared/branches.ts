@@ -1,5 +1,6 @@
 import type { ObjectId } from "mongodb";
 import type { GenericPaginationDTO } from "./common.js";
+import type { BranchDocument } from "./models.js";
 
 export interface GetBranchStocksRouteParameters {
     id: ObjectId;
@@ -92,4 +93,9 @@ export interface GetBranchLowestStocksRespDTO {
 export interface GetBranchesLowestStocksRespDTO {
     success: boolean;
     data?: GetBranchesLowestStocksDTO[];
+}
+
+export interface GetBranchesRespDTO {
+    success: boolean;
+    data?: BranchDocument[];
 }

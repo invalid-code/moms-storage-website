@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as branchService from '../services/branchService.js';
-import type { GetBranchLowestStocksRouteParams, GetBranchLowestStocksRouteQueries, GetBranchLowestStocksRespDTO, GetBranchStocksRespDTO, GetBranchStocksRouteParameters, GetBranchesLowestStocksRespDTO, GetBranchStockRespDTO, GetBranchStockRouteParams } from '@my-app/types/index.js';
+import type { GetBranchLowestStocksRouteParams, GetBranchLowestStocksRouteQueries, GetBranchLowestStocksRespDTO, GetBranchStocksRespDTO, GetBranchStocksRouteParameters, GetBranchesLowestStocksRespDTO, GetBranchStockRespDTO, GetBranchStockRouteParams, GetBranchesRespDTO } from '@my-app/types/index.js';
 import { ObjectId } from 'mongodb';
 
-export const getBranchesController = async (req: Request, res: Response, next: NextFunction) => {
+export const getBranchesController = async (req: Request, res: Response<GetBranchesRespDTO>, next: NextFunction) => {
   try {
     const data = await branchService.getBranchesService();
     res.status(200).json({ success: true, data });

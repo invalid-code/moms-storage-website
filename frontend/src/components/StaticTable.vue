@@ -51,10 +51,10 @@ const colSpanClass = computed(() => {
           :class="{ 'bg-white': !(i % 2 === 0), 'bg-[#A3A1A52E]': i % 2 === 0, 'border-r': Object.keys(content).length > 1 }"
           :style="{ '--tableColor': tableColor }">
           <template v-if="firstColContent === 'Pending'">
-            <img class="w-4 h-4" :src="checked" alt="">
+            <img class="w-4 h-4" :src="hourGlass" alt="">
           </template>
           <template v-else-if="firstColContent === 'Delivered'">
-            <img class="w-4 h-4" :src="hourGlass" alt="">
+            <img class="w-4 h-4" :src="checked" alt="">
           </template>
           <template v-else>
             {{ firstColContent }}

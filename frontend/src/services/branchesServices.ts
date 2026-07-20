@@ -1,9 +1,9 @@
 import { http } from "@/helper/requestHelper";
-import type { GetBranchLowestStocksRespDTO, GetBranchStocksRespDTO, GetBranchesLowestStocksRespDTO, GetBranchStockRespDTO } from "@my-app/types";
+import type { GetBranchLowestStocksRespDTO, GetBranchStocksRespDTO, GetBranchesLowestStocksRespDTO, GetBranchStockRespDTO, GetBranchesRespDTO } from "@my-app/types";
 
 export const branchService = {
   async getBranches() {
-    return http(`/branch`, { method: "GET" });
+    return http<GetBranchesRespDTO>(`/branch`, { method: "GET" });
   },
   async getBranchesLowestStock() {
     return http<GetBranchesLowestStocksRespDTO>(`/branch/lowest-stock`, { method: "GET" });

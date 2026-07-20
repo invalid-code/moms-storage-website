@@ -31,14 +31,23 @@ export interface GetDeliveryDTO {
     stocksRequested: MedicineDocument[];
 }
 
-export interface GetDeliveriesDTO {
+export interface GetDeliveriesMetadataDTO {
+    totalItems: number;
+}
+
+export interface GetDeliveriesDataDTO {
     _id: ObjectId;
     dateRequested: Date;
     dateDelivered: Date;
     delivered: boolean;
     stocksRequested: ObjectId[];
     branch: ObjectId;
-    branchDetails: BranchDocument[];
+    branchDetails: BranchDocument;
+}
+
+export interface GetDeliveriesDTO {
+    data: GetDeliveriesDataDTO[];
+    metadata: GetDeliveriesMetadataDTO[];
 }
 
 export interface CreateDeliveryRespDTO { success: boolean; message: string; }

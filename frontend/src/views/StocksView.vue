@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import InteractiveTable from '@/components/InteractiveTable.vue';
-import { useBranch, useBranches, useBranchStock } from '@/composables/useBranch';
+import { useBranches } from '@/composables/useBranch';
 import { useMedicineRecord, useMedicineRecords } from '@/composables/useMedicine';
+import type { GetBranchStockItemDTO, MedicineDocument } from '@my-app/types';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const interactiveColumns = ["Branch"];
@@ -12,12 +13,9 @@ const tooLargeContent = ref(false);
 const curPage = ref(1);
 let selectedRow = 0;
 
-const medicineRecords = ref([]);
-const branchStocks = ref([]);
+const medicineRecords = ref<MedicineDocument[]>([]);
 const { medicineRecords: curMedicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
-const { branches, isLoading: branchesLoading, error: branchesError, fetchBranches } = useBranches();
-const { branchStock, error: branchStockError, fetchBranchStock } = useBranchStock();
-const { branch: curBranchStocks, pagination: branchPagination, isLoading: _, error: branchError, fetchBranch } = useBranch();
+const { branches, branchStock, branchStocks, pagination: branchPagination, isLoading: branchesLoading, error: branchesError, fetchBranches, fetchBranchStock, fetchBranch } = useBranches();
 const { medicineRecord, isLoading, error, fetchMedicineRecord } = useMedicineRecord();
 let isFirst = true;
 
@@ -43,7 +41,7 @@ watch(translatedMedicineRecords, _ => {
   }
 });
 
-watch(curBranchStocks, newCurBranchStock => branchStocks.value.push(...newCurBranchStock));
+watch(branchStocks, newCurBranchStock => branchStocks.value.push(...newCurBranchStock));
 
 const translatedBranchStocks = computed(() => {
   return {
@@ -67,21 +65,22 @@ watch(translatedBranchStocks, _ => {
 
 watch(medicineRecord, newMedicineRecord => {
   if (curSelectedBranch.value === "") {
-    medicineRecords.value[selectedRow].name = newMedicineRecord.data.name;
-    medicineRecords.value[selectedRow].count = newMedicineRecord.data.count;
+    console.log(newMedicineRecord);
+    medicineRecords.value[selectedRow].name = newMedicineRecord.name;
+    medicineRecords.value[selectedRow].count = newMedicineRecord.count;
   } else {
-    branchStocks.value[selectedRow]["stock-name"] = newMedicineRecord.data.name;
-    branchStocks.value[selectedRow].stock_onhold_amount = newMedicineRecord.data.count;
+    branchStocks.value[selectedRow]["stock-name"] = newMedicineRecord.name;
+    branchStocks.value[selectedRow].stock_onhold_amount = newMedicineRecord.count;
   }
 });
 
 watch(branchStock, newBranchStock => {
   if (curSelectedBranch.value === "") {
-    medicineRecords.value[selectedRow].name = newBranchStock.data.stock_name;
-    medicineRecords.value[selectedRow].count = newBranchStock.data.stock_onhold_amount;
+    medicineRecords.value[selectedRow].name = newBranchStock.stock_name;
+    medicineRecords.value[selectedRow].count = newBranchStock.stock_onhold_amount;
   } else {
-    branchStocks.value[selectedRow]["stock-name"] = newBranchStock.data.stock_name;
-    branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.data.stock_onhold_amount;
+    branchStocks.value[selectedRow]["stock-name"] = newBranchStock.stock_name;
+    branchStocks.value[selectedRow].stock_onhold_amount = newBranchStock.stock_onhold_amount;
   }
 });
 
@@ -150,12 +149,10 @@ onMounted(() => {
       :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" @seen="handle"
       :next-page-i="10">
       <template v-for="header in interactiveColumns" #[`headers-${header}`]>
-        <div v-show="!branchesLoading">
-          <select v-model="curSelectedBranch">
-            <option value="">Branch</option>
-            <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
-          </select>
-        </div>
+        <select v-show="!branchesLoading" v-model="curSelectedBranch">
+          <option value="">Branch</option>
+          <option v-for="branch in branches" :value="branch._id">{{ branch.name.toUpperCase() }}</option>
+        </select>
       </template>
       <template v-for="i in Array.from({ length: translatedMedicineRecords['Stock Name'].length }, (_, i) => 0 + i)"
         #[`row-${i}`]>

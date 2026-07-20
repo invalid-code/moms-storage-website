@@ -6,7 +6,7 @@ import deliveryTruckBlack from '../assets/delivery_truck_black.png';
 import paperAirplaneBlack from '../assets/paper_airplane_black.png';
 import InfoCard from '@/components/InfoCard.vue';
 import StockCard from '@/components/StockCard.vue';
-import { useBranch, useBranchesLowestStocks } from '@/composables/useBranch';
+import { useBranches } from '@/composables/useBranch';
 import { useDeliveries } from '@/composables/useDelivery';
 import { useMedicineRecords } from '@/composables/useMedicine';
 import { ref, onMounted, watch } from 'vue';
@@ -21,6 +21,7 @@ const startingPoint = ref(0);
 let selectedBranch = ref("");
 let medicineRecordsCnt = 4;
 const showFilters = ref(false);
+let hasFilters = false;
 
 const branchesDropdownEmitHandler = (payload: string) => {
   selectedBranch.value = payload;
@@ -28,10 +29,10 @@ const branchesDropdownEmitHandler = (payload: string) => {
 
 const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
 const { deliveries, pagination: _, isLoading: deliveriesLoading, error: deliveriesError, fetchDeliveries } = useDeliveries();
-const { branchesLowestStocks, isLoading: branchesLowestStocksLoading, error: branchesLowestStocksError, fetchBranchesLowestStocks } = useBranchesLowestStocks();
-const { branch, isLoading: branchLoading, error: branchError, fetchBranch } = useBranch();
+const { branchesLowestStocks, branchStocks, pagination: branchStocksPagination, isLoading: branchesLoading, error: branchesError, fetchBranchesLowestStocks, fetchBranch } = useBranches();
 
 const submitFilters = async () => {
+  hasFilters = true;
   showFilters.value = false;
   curSelectedBranch.value = selectedBranch.value;
   curPage.value = 1;
@@ -68,28 +69,50 @@ const selectStockQuantity = () => {
 };
 
 const moveRight = () => {
-  if (startingPoint.value + 5 < medicineRecordsPagination.value.totalPages) {
-    startingPoint.value += 1;
+  if (curSelectedBranch.value === '') {
+    if (!medicineRecordsPagination.value.hasNextPage) return;
+  } else {
+    if (!branchStocksPagination.value.hasNextPage) return;
   }
+  curPage.value += 1;
 };
 
 const moveLeft = () => {
-  if (startingPoint.value != 0) {
-    startingPoint.value -= 1;
+  if (curSelectedBranch.value === '') {
+    if (!medicineRecordsPagination.value.hasPrevPage) return;
+  } else {
+    if (!branchStocksPagination.value.hasPrevPage) return;
   }
+  curPage.value -= 1;
 };
+
+watch(curPage, newCurPage => {
+  if (curSelectedBranch.value === '') {
+    if (hasFilters) {
+      fetchMedicineRecords(newCurPage, medicineRecordsCnt, stockSearch.value);
+    } else {
+      fetchMedicineRecords(newCurPage, medicineRecordsCnt, "");
+    }
+  }
+  else {
+    if (hasFilters) {
+      fetchBranch(curSelectedBranch.value, newCurPage, medicineRecordsCnt, stockSearch.value, selectedStockQuantity.value);
+    } else {
+      fetchBranch(curSelectedBranch.value, newCurPage, medicineRecordsCnt, "", null);
+    }
+  }
+});
 
 onMounted(() => {
   fetchMedicineRecords(curPage.value, medicineRecordsCnt, "");
   fetchDeliveries(1, 3, '');
   fetchBranchesLowestStocks();
-
 });
 </script>
 
 <template>
   <div class="grid grid-cols-2 gap-5 p-5 h-full">
-    <InfoCard v-show="!branchesLowestStocksLoading" title="Low Stocks" table-color="#EF2D56">
+    <InfoCard v-show="!branchesLoading" title="Low Stocks" table-color="#EF2D56">
       <template v-for="(branchStock, i) in branchesLowestStocks" #[`row-${i}`]>
         <div class="flex items-center px-4.75 pt-5">
           <div class="w-2 h-2 bg-red-600 rounded-[50%]"></div>
@@ -128,10 +151,10 @@ onMounted(() => {
         </div>
       </template>
     </InfoCard>
-    <div class="fixed bg-white p-2.25 rounded-[25px] shadow" :class="{ 'hidden': !showFilters }">
+    <div class="fixed bg-white p-2.25 rounded-[25px] shadow top-94.5 left-19" :class="{ 'hidden': !showFilters }">
       <div class="bg-[#373638] p-1.25 rounded-[3px] flex mb-2.25">
         <input class="bg-[rgba(91,90,94,0.5)] rounded-xs" type="text" v-model="stockSearch">
-        <div class="bg-[rgba(91,90,94,0.5)] rounded-xs ml-1.25 flex justify-center items-center w-[24px]">
+        <div class="bg-[rgba(91,90,94,0.5)] rounded-xs ml-1.25 flex justify-center items-center w-6">
           <img class="h-3.25 w-3.25" :src="search" alt="">
         </div>
       </div>
@@ -147,14 +170,21 @@ onMounted(() => {
     <div class="bg-white col-span-2 rounded-[25px] overflow-hidden p-5">
       <div class="flex justify-end items-center mb-1.5 text-[8px] px-2.25 py-1.25" @click="showFilters = true">Filters
       </div>
-      <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
-        <template v-if="curSelectedBranch === ''">
-          <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"
-            :stock-name="medicineRecord.name" />
-        </template>
-        <template v-else>
-          <StockCard v-show="!branchLoading" v-for="branchStocks in branch" :stock-name="branchStocks['stock-name']" />
-        </template>
+      <div class="flex justify-center items-center w-full">
+        <div class="w-13.25 h-46.25 bg-linear-to-r from-[#111111] via-[rgba(255,255,255,0.5)] to-[rgba(255,255,255,0)]"
+          @click="moveLeft"></div>
+        <div class="grid grid-cols-2 gap-x-5 gap-y-5 grid-rows-2">
+          <template v-if="curSelectedBranch === ''">
+            <StockCard v-show="!medicineRecordsLoading" v-for="medicineRecord in medicineRecords"
+              :stock-name="medicineRecord.name" />
+          </template>
+          <template v-else>
+            <StockCard v-show="!branchesLoading" v-for="branchStock in branchStocks"
+              :stock-name="branchStock['stock-name']" />
+          </template>
+        </div>
+        <div class="w-13.25 h-46.25 bg-linear-to-l from-[#111111] via-[rgba(255,255,255,0.5)] to-[rgba(255,255,255,0)]"
+          @click="moveRight"></div>
       </div>
     </div>
   </div>

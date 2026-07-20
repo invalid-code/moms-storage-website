@@ -5,7 +5,7 @@ import type { DeliveryDocument, GetDeliveriesDTO, GetDeliveryDTO, UpdateDelivery
 export const getDeliveriesService = async (page: number, limit: number, branchId?: ObjectId) => {
   const branchIdMatch = branchId !== undefined ? [{ $match: { branch: branchId } }] : [];
   const skip = (page - 1) * limit;
-  const pipeline = [
+  const aggregationResult = await deliveryCollection.aggregate<GetDeliveriesDTO>([
     ...branchIdMatch,
     { $sort: { createdAt: -1 } },
     { $skip: skip },
@@ -18,13 +18,17 @@ export const getDeliveriesService = async (page: number, limit: number, branchId
         as: "branchDetails"
       }
     },
-    { $unwind: { path: "$branchDetails", preserveNullAndEmptyArrays: true } }
-  ];
+    { $unwind: { path: "$branchDetails", preserveNullAndEmptyArrays: true } },
+     {
+      $facet: {
+        metadata: [{ $count: 'totalItems' }],
+        data: [{ $skip: skip }, { $limit: limit }]
+      }
+    }
+  ]).toArray();
 
-  const [data, totalItems] = await Promise.all([
-    deliveryCollection.aggregate<GetDeliveriesDTO>(pipeline).toArray(),
-    deliveryCollection.countDocuments()
-  ]);
+  const data = aggregationResult[0]?.data || [];
+  const totalItems = aggregationResult[0]?.metadata[0]?.totalItems || 0;
 
   return { data, totalItems };
 };

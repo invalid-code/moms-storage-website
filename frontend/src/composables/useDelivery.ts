@@ -1,10 +1,10 @@
 import type { ObjectId } from "mongodb";
 import { deliveryService } from "@/services/deliveriesServices";
-import type { CreateDeliveryDTO, GenericPaginationDTO, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from "@my-app/types";
+import type { CreateDeliveryDTO, GenericPaginationDTO, GetDeliveriesDataDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from "@my-app/types";
 import { ref } from "vue";
 
 export function useDeliveries() {
-  const deliveries = ref<GetDeliveriesDTO[]>([]);
+  const deliveries = ref<GetDeliveriesDataDTO[]>([]);
   const delivery = ref<GetDeliveryDTO>();
   const pagination = ref<GenericPaginationDTO>({
     currentPage: 0,

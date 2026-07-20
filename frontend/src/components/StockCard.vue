@@ -11,7 +11,7 @@ const props = defineProps({
 
 <template>
   <div class="bg-[#0CCE6B] p-3 rounded-[25px] flex flex-col items-center">
-    <img class="max-h-26.75 max-w-26.75" :src="imgPlaceholder" alt="placholder image">
+    <img class="max-h-18.75 max-w-18.75" :src="imgPlaceholder" alt="placholder image">
     <div class="flex mt-1.5 w-full">
       <p class="text-[9px]">{{ stockName }}</p>
       <div class="flex ml-auto items-center">
