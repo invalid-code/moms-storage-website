@@ -1,5 +1,5 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
-import type { BranchDocument, DeliveryDocument, MedicineDocument } from '@my-app/types/index.js';
+import type { BranchDocument, DeliveryDocument, MedicineDocument } from '../types/models.js';
 
 const uri = process.env.MONGO_DB_CONN_STR;
 if (!uri) {

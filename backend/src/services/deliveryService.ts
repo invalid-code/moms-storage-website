@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { deliveryCollection, branchCollection } from '../config/db.js';
-import type { DeliveryDocument, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from '@my-app/types/index.js';
+import type { DeliveryDTO, GetDeliveriesDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from '@my-app/types';
+import type { DeliveryDocument } from '../types/models.js';
 
 export const getDeliveriesService = async (page: number, limit: number, branchId?: ObjectId) => {
   const branchIdMatch = branchId !== undefined ? [{ $match: { branch: branchId } }] : [];
@@ -70,14 +71,14 @@ export const updateDeliveryService = async (id: ObjectId, body: UpdateDeliverySe
 
   const updatedDelivery = await deliveryCollection.findOneAndUpdate(
     { _id: id },
-    { $set: body },
+    { $set: { delivered: body.delivered, dateDelivered: new Date(body.dateDelivered) } },
     { returnDocument: 'after' }
   );
 
   const branchId = delivery.branch;
 
   for (const item of body.stocksReceived) {
-    const stockObjectId = item.stockId;
+    const stockObjectId = new ObjectId(item.stockId);
     const amountToAdd = item.amount;
 
     const updateResult = await branchCollection.updateOne(
@@ -97,5 +98,14 @@ export const updateDeliveryService = async (id: ObjectId, body: UpdateDeliverySe
     }
   }
 
-  return updatedDelivery;
+  if (!updatedDelivery) return null;
+  const dto: DeliveryDTO = {
+    _id: updatedDelivery._id.toString(),
+    dateRequested: updatedDelivery.dateRequested.toISOString(),
+    ...(updatedDelivery.dateDelivered !== undefined ? { dateDelivered: updatedDelivery.dateDelivered.toISOString() } : {}),
+    delivered: updatedDelivery.delivered,
+    branch: updatedDelivery.branch.toString(),
+    stocksRequested: updatedDelivery.stocksRequested.map(id => id.toString()),
+  };
+  return dto;
 };

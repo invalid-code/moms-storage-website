@@ -1,9 +1,8 @@
-import type { ObjectId } from "mongodb";
-import type { MedicineDocument } from "./models.js";
-import type { GenericPaginationDTO } from "./common.js";
+import type { MedicineDTO } from "./models.dto.js";
+import type { GenericPaginationDTO, ID } from "./common.js";
 
 export interface GetMedicineRouteParams {
-    id: ObjectId;
+    id: ID;
 }
 
 export interface GetMedicinesQueryParams {
@@ -17,18 +16,18 @@ export interface GetMedicinesMetadataDTO {
 }
 
 export interface GetMedicinesDTO {
-    data: MedicineDocument[];
+    data: MedicineDTO[];
     metadata: GetMedicinesMetadataDTO[];
 }
 
 export interface GetMedicineRespDTO {
     success: boolean;
-    data?: MedicineDocument | undefined | null;
+    data?: MedicineDTO | undefined | null;
     message?: string;
 }
 
 export interface GetMedicinesRespDTO {
     success: boolean;
-    data: MedicineDocument[];
+    data: MedicineDTO[];
     pagination: GenericPaginationDTO;
 }

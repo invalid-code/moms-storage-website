@@ -2,7 +2,7 @@
 import InteractiveTable from '@/components/InteractiveTable.vue';
 import { useBranches } from '@/composables/useBranch';
 import { useMedicineRecord, useMedicineRecords } from '@/composables/useMedicine';
-import type { GetBranchStockItemDTO, MedicineDocument } from '@my-app/types';
+import type { GetBranchStockItemDTO, MedicineDTO } from '@my-app/types';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const interactiveColumns = ["Branch"];
@@ -13,7 +13,7 @@ const tooLargeContent = ref(false);
 const curPage = ref(1);
 let selectedRow = 0;
 
-const medicineRecords = ref<MedicineDocument[]>([]);
+const medicineRecords = ref<MedicineDTO[]>([]);
 const { medicineRecords: curMedicineRecords, pagination: medicineRecordsPagination, isLoading: medicineRecordsLoading, error: medicineRecordsError, fetchMedicineRecords } = useMedicineRecords();
 const { branches, branchStock, branchStocks, pagination: branchPagination, isLoading: branchesLoading, error: branchesError, fetchBranches, fetchBranchStock, fetchBranch } = useBranches();
 const { medicineRecord, isLoading, error, fetchMedicineRecord } = useMedicineRecord();
@@ -75,6 +75,7 @@ watch(medicineRecord, newMedicineRecord => {
 });
 
 watch(branchStock, newBranchStock => {
+  if (newBranchStock === undefined) return;
   if (curSelectedBranch.value === "") {
     medicineRecords.value[selectedRow].name = newBranchStock.stock_name;
     medicineRecords.value[selectedRow].count = newBranchStock.stock_onhold_amount;
@@ -95,7 +96,7 @@ const getRowBranchStocks = (id: number) => {
 
   let stockId = "";
   if (curSelectedBranch.value === "") {
-    stockId = medicineRecords.value[id]._id;
+    stockId = medicineRecords.value[id]._id ?? "";
   } else {
     stockId = branchStocks.value[id]["stock-id"];
   }

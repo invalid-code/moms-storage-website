@@ -1,4 +1,3 @@
-import type { ObjectId } from "mongodb";
 import { deliveryService } from "@/services/deliveriesServices";
 import type { CreateDeliveryDTO, GenericPaginationDTO, GetDeliveriesDataDTO, GetDeliveryDTO, UpdateDeliverySelectivelyDTO } from "@my-app/types";
 import { ref } from "vue";
@@ -40,7 +39,7 @@ export function useDeliveries() {
     error.value = null;
     try {
       const apiResp = await deliveryService.getDelivery(deliveryId);
-      delivery.value = apiResp.data;
+      delivery.value = apiResp.data ?? undefined;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;

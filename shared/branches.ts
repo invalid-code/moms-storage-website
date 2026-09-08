@@ -1,18 +1,17 @@
-import type { ObjectId } from "mongodb";
-import type { GenericPaginationDTO } from "./common.js";
-import type { BranchDocument } from "./models.js";
+import type { GenericPaginationDTO, ID } from "./common.js";
+import type { BranchDTO } from "./models.dto.js";
 
 export interface GetBranchStocksRouteParameters {
-    id: ObjectId;
+    id: ID;
 }
 
 export interface GetBranchLowestStocksRouteParams {
-    id: ObjectId;
+    id: ID;
 }
 
 export interface GetBranchStockRouteParams {
-    branchId: ObjectId;
-    stockId: ObjectId;
+    branchId: ID;
+    stockId: ID;
 }
 
 export interface GetBranchLowestStocksRouteQueries {
@@ -24,12 +23,12 @@ export interface GetBranchLowestStocksRouteQueries {
 
 export interface GetBranchStockDTO {
     stock_name: string;
-    stock_id: ObjectId;
+    stock_id: ID;
     stock_onhold_amount: number;
 }
 
 export interface GetBranchStockItemDTO {
-    "stock-id": ObjectId; 
+    "stock-id": ID; 
     "stock-name": string;
     stock_onhold_amount: number;
     percentage: number;
@@ -52,7 +51,7 @@ export interface GetBranchesLowestStockDTO {
 
 export interface GetBranchLowestStocksItemDTO {
     "stock-name": string;
-    stock_onhold_amount: string;
+    stock_onhold_amount: number;
 }
 
 export interface GetBranchLowestStocksMetadataDTO {
@@ -97,5 +96,5 @@ export interface GetBranchesLowestStocksRespDTO {
 
 export interface GetBranchesRespDTO {
     success: boolean;
-    data?: BranchDocument[];
+    data?: BranchDTO[];
 }

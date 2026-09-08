@@ -4,6 +4,7 @@ import BranchesDropdown from './BranchesDropdown.vue';
 import InteractiveTable from './InteractiveTable.vue';
 import { useDeliveries } from '@/composables/useDelivery.ts';
 import { useMedicineRecords } from '@/composables/useMedicine.ts';
+import type { CreateDeliveryDTO } from '@my-app/types';
 
 defineProps({
   isOpen: {
@@ -13,20 +14,20 @@ defineProps({
 });
 const emit = defineEmits(['close']);
 
-const stocksId = ref([]);
-const selectedStocks = ref([]);
+const stocksId = ref<string[]>([]);
+const selectedStocks = ref<string[]>([]);
 const tooLargeContent = ref(false);
 const interactiveColumns = ["Stock Name"];
 const curSelectedBranch = ref("6a22d28e5882d14a0b85c54b"); // todo: when first load get the default selected value
 const curPage = ref(1);
 let isFirst = true;
-let stockName = [];
+let stockName: string[] = [];
 
 const { isLoading: createDeliveryLoading, error: createDeliveryError, createDelivery } = useDeliveries();
 const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineLoading, error: medicineError, fetchMedicineRecords } = useMedicineRecords();
 
 const translatedMedicineRecords = computed(() => {
-  stocksId.value = medicineRecords.value.map(medicineRecord => medicineRecord._id);
+  stocksId.value = medicineRecords.value.map(medicineRecord => medicineRecord._id ?? "");
   stockName.push(...medicineRecords.value.map(medicineRecord => medicineRecord.name));
   return {
     "Stock Name": stockName
@@ -42,7 +43,7 @@ watch(translatedMedicineRecords, _ => {
 });
 
 const handleConfirm = async () => {
-  const data = {
+  const data: CreateDeliveryDTO = {
     branchId: curSelectedBranch.value,
     stocksRequested: selectedStocks.value,
   }

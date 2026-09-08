@@ -1,9 +1,9 @@
 import { branchService } from "@/services/branchesServices";
 import { ref } from "vue";
-import type { BranchDocument, GenericPaginationDTO, GetBranchesLowestStocksDTO, GetBranchLowestStocksItemDTO, GetBranchStockDTO, GetBranchStockItemDTO, GetBranchStockRespDTO } from "@my-app/types";
+import type { BranchDTO, GenericPaginationDTO, GetBranchesLowestStocksDTO, GetBranchLowestStocksItemDTO, GetBranchStockDTO, GetBranchStockItemDTO, GetBranchStockRespDTO } from "@my-app/types";
 
 export function useBranches() {
-  const branches = ref<BranchDocument[]>([]);
+  const branches = ref<BranchDTO[]>([]);
   const branchesLowestStocks = ref<GetBranchesLowestStocksDTO[]>([]);
   const branchStocks = ref<GetBranchStockItemDTO[]>([]);
   const branchStock = ref<GetBranchStockDTO>();
@@ -23,7 +23,7 @@ export function useBranches() {
     isLoading.value = true;
     error.value = null;
     try {
-      branches.value = (await branchService.getBranches()).data;
+      branches.value = (await branchService.getBranches()).data ?? [];
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -40,7 +40,7 @@ export function useBranches() {
     error.value = null;
     try {
       const apiResp = await branchService.getBranchesLowestStock();
-      branchesLowestStocks.value = apiResp.data;
+      branchesLowestStocks.value = apiResp.data ?? [];
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -57,8 +57,8 @@ export function useBranches() {
     error.value = null;
     try {
       const apiResp = await branchService.getBranch(id, page, limit, stockName, stockQuantity);
-      branchStocks.value = apiResp.data;
-      pagination.value = apiResp.pagination;
+      branchStocks.value = apiResp.data ?? [];
+      if (apiResp.pagination !== undefined) pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;
@@ -92,8 +92,8 @@ export function useBranches() {
     error.value = null;
     try {
       const apiResp = await branchService.getBranchLowestStocks(id, page, limit);
-      branchLowestStocks.value = apiResp.data;
-      pagination.value = apiResp.pagination;
+      branchLowestStocks.value = apiResp.data ?? [];
+      if (apiResp.pagination !== undefined) pagination.value = apiResp.pagination;
     } catch (err) {
       if (err instanceof Error) {
         error.value = err.message;

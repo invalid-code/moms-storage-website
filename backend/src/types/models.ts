@@ -20,7 +20,7 @@ export interface BranchDocument {
 export interface DeliveryDocument {
     _id?: ObjectId;
     dateRequested: Date;
-    dateReceived?: Date;
+    dateDelivered?: Date;
     delivered: boolean;
     branch: ObjectId;
     stocksRequested: ObjectId[];

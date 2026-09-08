@@ -9,27 +9,26 @@ const route = useRoute();
 
 const tooLargeContent = ref(false);
 const deliveryId = computed(() => route.params.deliveryId as string);
-const deliveryStocksId: string[] = [];
+const deliveryStocksId = computed(() => delivery.value?.stocksRequested.map(stockRequested => stockRequested._id ?? "") ?? []);
 
 const { delivery, isLoading, error, fetchDelivery, patchDelivery } = useDeliveries();
-const updatedDelivery = ref<UpdateDeliverySelectivelyDTO>({ delivered: true, dateDelivered: new Date(), stocksReceived: [] });
+const updatedDelivery = ref<UpdateDeliverySelectivelyDTO>({ delivered: true, dateDelivered: new Date().toISOString(), stocksReceived: [] });
 const deliveryStockAmounts = ref<number[]>([]);
 
 const translatedDelivery = computed(() => {
   if (delivery.value === undefined) return { "Stock Name": [], Amount: [] };
-  deliveryStocksId.push(...delivery.value.stocksRequested.map(stockRequested => stockRequested._id));
   return { "Stock Name": delivery.value.stocksRequested.map(stockRequested => stockRequested.name), Amount: [] };
 });
 
 const handle = (_: string) => { };
 
 const updateDelivery = () => {
-  updatedDelivery.value.stocksReceived.push(...deliveryStockAmounts.value.map<StocksReceivedDTO>((deliveryStockAmount, i: number) => ({ stockId: deliveryStocksId[i], amount: deliveryStockAmount })));
+  updatedDelivery.value.stocksReceived = deliveryStockAmounts.value.map<StocksReceivedDTO>((deliveryStockAmount, i: number) => ({ stockId: deliveryStocksId.value[i] ?? "", amount: deliveryStockAmount }));
   patchDelivery(deliveryId.value, updatedDelivery.value);
 };
 
 watch(delivery, newDelivery => {
-  if (newDelivery.stocksRequested.length > 10) {
+  if ((newDelivery?.stocksRequested.length ?? 0) > 10) {
     tooLargeContent.value = true;
   }
 });

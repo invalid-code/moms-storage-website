@@ -1,3 +1,6 @@
+export type ID = string;
+export type ISODate = string;
+
 export interface GenericPaginationDTO {
     totalItems: number;
     totalPages: number;

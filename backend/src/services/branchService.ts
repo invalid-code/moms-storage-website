@@ -1,9 +1,16 @@
 import { ObjectId } from 'mongodb';
 import { branchCollection } from '../config/db.js';
-import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetBranchesLowestStocksDTO, GetBranchStockDTO } from '@my-app/types/index.js';
+import type { GetBranchLowestStocksDTO, GetBranchStocksDTO, GetBranchesLowestStocksDTO, GetBranchStockDTO, BranchDTO, BranchStock } from '@my-app/types';
 
 export const getBranchesService = async () => {
-  return await branchCollection.find({}).toArray();
+  return (await branchCollection.find({}).toArray()).map<BranchDTO>(branch => ({
+    _id: branch._id.toString(),
+    name: branch.name,
+    stocks: (branch.stocks ?? []).map<BranchStock>(branchStock => ({
+      ...(branchStock.stock_id !== undefined ? { stock_id: branchStock.stock_id.toString() } : {}),
+      stock_onhold_amount: branchStock.stock_onhold_amount
+    }))
+  }));
 };
 
 export const getBranchesLowestStocksService = async () => {

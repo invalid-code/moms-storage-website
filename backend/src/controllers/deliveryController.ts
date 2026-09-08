@@ -68,7 +68,7 @@ export const updateDeliveryController = async (req: Request<UpdateDeliverySelect
     }
 
     updatedDelivery.stocksReceived = updatedDelivery.stocksReceived.map<StocksReceivedDTO>(stockRequested => ({
-      stockId: new ObjectId(stockRequested.stockId),
+      stockId: stockRequested.stockId.toString(),
       amount: parseInt(stockRequested.amount.toString()),
     }));
     const updatedData = await deliveryService.updateDeliveryService(new ObjectId(id), updatedDelivery);

@@ -1,34 +1,33 @@
-import type { ObjectId } from "mongodb";
-import type { MedicineDocument, BranchDocument, DeliveryDocument } from "./models.js";
-import type { GenericPaginationDTO } from "./common.js";
+import type { MedicineDTO, BranchDTO, DeliveryDTO } from "./models.dto.js";
+import type { GenericPaginationDTO, ID, ISODate } from "./common.js";
 
-export interface GetDeliveryRouteParams { id: ObjectId; }
-export interface GetDeliveriesRouteQueries { page?: number; limit?: number; branchId?: ObjectId }
-export interface UpdateDeliverySelectivelyRouteParams { id: ObjectId; }
+export interface GetDeliveryRouteParams { id: ID; }
+export interface GetDeliveriesRouteQueries { page?: number; limit?: number; branchId?: ID }
+export interface UpdateDeliverySelectivelyRouteParams { id: ID; }
 
 export interface CreateDeliveryDTO {
-    branchId: ObjectId;
-    stocksRequested: ObjectId[];
+    branchId: ID;
+    stocksRequested: ID[];
 }
 
 export interface StocksReceivedDTO {
-    stockId: ObjectId;
+    stockId: ID;
     amount: number;
 }
 
 export interface UpdateDeliverySelectivelyDTO {
     delivered: boolean;
-    dateDelivered: Date;
+    dateDelivered: ISODate;
     stocksReceived: StocksReceivedDTO[];
 }
 
 export interface GetDeliveryDTO {
-    _id: ObjectId;
-    dateRequested: Date;
-    dateDelivered?: Date;
+    _id: ID;
+    dateRequested: ISODate;
+    dateDelivered?: ISODate;
     delivered: boolean;
-    branch: ObjectId;
-    stocksRequested: MedicineDocument[];
+    branch: ID;
+    stocksRequested: MedicineDTO[];
 }
 
 export interface GetDeliveriesMetadataDTO {
@@ -36,13 +35,13 @@ export interface GetDeliveriesMetadataDTO {
 }
 
 export interface GetDeliveriesDataDTO {
-    _id: ObjectId;
-    dateRequested: Date;
-    dateDelivered: Date;
+    _id: ID;
+    dateRequested: ISODate;
+    dateDelivered: ISODate;
     delivered: boolean;
-    stocksRequested: ObjectId[];
-    branch: ObjectId;
-    branchDetails: BranchDocument;
+    stocksRequested: ID[];
+    branch: ID;
+    branchDetails: BranchDTO;
 }
 
 export interface GetDeliveriesDTO {
@@ -52,5 +51,5 @@ export interface GetDeliveriesDTO {
 
 export interface CreateDeliveryRespDTO { success: boolean; message: string; }
 export interface GetDeliveryRespDTO { success: boolean; data?: GetDeliveryDTO | null | undefined; message?: string; }
-export interface GetDeliveriesRespDTO { success: boolean; data: GetDeliveriesDTO[]; pagination: GenericPaginationDTO; }
-export interface UpdateDeliveryRespDTO { success: boolean; data?: DeliveryDocument | null; message?: string; }
+export interface GetDeliveriesRespDTO { success: boolean; data: GetDeliveriesDataDTO[]; pagination: GenericPaginationDTO; }
+export interface UpdateDeliveryRespDTO { success: boolean; data?: DeliveryDTO | null; message?: string; }

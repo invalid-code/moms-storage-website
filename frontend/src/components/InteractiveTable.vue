@@ -39,7 +39,7 @@ const props = defineProps({
 
 const emit = defineEmits(["seen"]);
 
-const everyFirstPage = (el) => {
+const everyFirstPage = (el: any) => {
   if (el) {
     target.value = el;
   }
@@ -67,7 +67,7 @@ watch(targetIsVisible, (newTargetIsVisible) => {
         <div v-for="header, i in Object.keys(content)"
           class="text-[12px] flex justify-center items-center border-(--tableColor)"
           :class="{ 'bg-[#A3A1A52E]': curRow % 2 === 0, 'bg-white': !(curRow % 2 === 0), 'border-r': (i + 1) % columnAmt != 0 }"
-          :style="{ '--tableColor': tableColor }" :ref="curRow % nextPageI == 0 ? everyFirstPage : null">
+          :style="{ '--tableColor': tableColor }" :ref="curRow % nextPageI == 0 ? everyFirstPage : undefined">
           <template v-if="interactiveColumns.includes(header)">
             <slot :name="`row-${curRow}`"></slot>
           </template>

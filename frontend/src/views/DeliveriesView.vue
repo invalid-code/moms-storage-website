@@ -14,7 +14,7 @@ let deliveriesI = 0;
 const { branches, isLoading: branchesLoading, error: branchesError, fetchBranches } = useBranches();
 const { deliveries, pagination: deliveriesPagination, isLoading: deliveriesLoading, error: deliveriesError, fetchDeliveries } = useDeliveries();
 let isFirst = true;
-const deliveriesId = ref([]);
+const deliveriesId = ref<string[]>([]);
 
 watch(deliveries, newDeliveries => {
   receiveDeliveries.value.push(...newDeliveries.map(delivery => {
@@ -22,7 +22,7 @@ watch(deliveries, newDeliveries => {
     deliveriesI += 1;
     return indToRet;
   }).filter(i => i !== null));
-  deliveriesId.value.push(...newDeliveries.map(delivery => delivery._id));
+  deliveriesId.value.push(...newDeliveries.map(delivery => delivery._id ?? ""));
   if (isFirst && deliveriesPagination.value.totalItems > 10) {
     tooLargeContent.value = true;
     fetchDeliveries(curPage.value, 10, '');
