@@ -29,12 +29,13 @@ beforeEach(() => {
 describe('getMedicineService', () => {
   it('maps the ObjectId to a string DTO', async () => {
     const id = new ObjectId();
-    medicineCollection.findOne.mockResolvedValue({ _id: id, name: 'Paracetamol', count: 100 });
+    medicineCollection.findOne.mockResolvedValue({ _id: id, name: 'Paracetamol', count: 100, price: 25 });
 
     await expect(getMedicineService(id)).resolves.toEqual({
       _id: id.toString(),
       name: 'Paracetamol',
       count: 100,
+      price: 25,
     });
   });
 
@@ -52,7 +53,7 @@ describe('getPaginatedMedicinesService', () => {
       toArray: () =>
         Promise.resolve([
           {
-            data: [{ _id: id, name: 'Paracetamol', count: 100 }],
+            data: [{ _id: id, name: 'Paracetamol', count: 100, price: 25 }],
             metadata: [{ totalItems: 1 }],
           },
         ]),
@@ -61,7 +62,7 @@ describe('getPaginatedMedicinesService', () => {
     const result = await getPaginatedMedicinesService(1, 10, '');
 
     expect(result).toEqual({
-      data: [{ _id: id.toString(), name: 'Paracetamol', count: 100 }],
+      data: [{ _id: id.toString(), name: 'Paracetamol', count: 100, price: 25 }],
       totalItems: 1,
     });
   });

@@ -34,7 +34,7 @@ describe('GET /api/item', () => {
       toArray: () =>
         Promise.resolve([
           {
-            data: [{ _id: id, name: 'Paracetamol', count: 100 }],
+            data: [{ _id: id, name: 'Paracetamol', count: 100, price: 25 }],
             metadata: [{ totalItems: 25 }],
           },
         ]),
@@ -44,7 +44,7 @@ describe('GET /api/item', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toEqual([{ _id: id.toString(), name: 'Paracetamol', count: 100 }]);
+    expect(res.body.data).toEqual([{ _id: id.toString(), name: 'Paracetamol', count: 100, price: 25 }]);
     expect(res.body.pagination).toMatchObject({
       totalItems: 25,
       totalPages: 3,
@@ -79,14 +79,14 @@ describe('GET /api/item/:id', () => {
 
   it('returns the mapped medicine when found', async () => {
     const id = new ObjectId();
-    medicineCollection.findOne.mockResolvedValue({ _id: id, name: 'Ibuprofen', count: 50 });
+    medicineCollection.findOne.mockResolvedValue({ _id: id, name: 'Ibuprofen', count: 50, price: 12.5 });
 
     const res = await request(app).get(`/api/item/${id.toString()}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       success: true,
-      data: { _id: id.toString(), name: 'Ibuprofen', count: 50 },
+      data: { _id: id.toString(), name: 'Ibuprofen', count: 50, price: 12.5 },
     });
   });
 

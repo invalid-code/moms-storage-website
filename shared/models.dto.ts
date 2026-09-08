@@ -4,6 +4,7 @@ export interface MedicineDTO {
     _id?: ID;
     name: string;
     count: number;
+    price: number;
 }
 
 export interface BranchStock {

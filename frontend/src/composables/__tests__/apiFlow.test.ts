@@ -91,7 +91,7 @@ describe('medicine API flow (composable -> service -> http -> fetch)', () => {
   it('fetchMedicineRecords populates records from the real HTTP path', async () => {
     const payload = {
       success: true,
-      data: [{ _id: 'm1', name: 'Paracetamol', count: 100 }],
+      data: [{ _id: 'm1', name: 'Paracetamol', count: 100, price: 25 }],
       pagination: {
         totalItems: 1,
         totalPages: 1,
@@ -108,7 +108,7 @@ describe('medicine API flow (composable -> service -> http -> fetch)', () => {
 
     await fetchMedicineRecords(1, 10, '');
 
-    expect(medicineRecords.value).toEqual([{ _id: 'm1', name: 'Paracetamol', count: 100 }]);
+    expect(medicineRecords.value).toEqual([{ _id: 'm1', name: 'Paracetamol', count: 100, price: 25 }]);
     const [req] = fetchMock.mock.calls[0] as [Request];
     expect(req.url).toBe('https://api.test/item?page=1&limit=10&stockName=');
   });

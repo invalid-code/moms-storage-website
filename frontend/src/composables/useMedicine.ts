@@ -39,7 +39,8 @@ export function useMedicineRecords() {
 export function useMedicineRecord() {
   const medicineRecord = ref<MedicineDTO>({
     count: 0,
-    name: ""
+    name: "",
+    price: 0
   });
   const isLoading = ref(false);
   const error = ref<Error | string | null>(null);

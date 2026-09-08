@@ -4,6 +4,7 @@ export interface MedicineDocument {
     _id?: ObjectId;
     name: string;
     count: number;
+    price: number;
 }
 
 export interface BranchStock {
@@ -24,4 +25,20 @@ export interface DeliveryDocument {
     delivered: boolean;
     branch: ObjectId;
     stocksRequested: ObjectId[];
+}
+
+export interface SaleItem {
+    stock_id: ObjectId;
+    quantity: number;
+    unitPrice: number;
+}
+
+export interface SaleDocument {
+    _id?: ObjectId;
+    branch: ObjectId;
+    items: SaleItem[];
+    total: number;
+    dateSold: Date;
+    voided: boolean;
+    dateVoided?: Date;
 }

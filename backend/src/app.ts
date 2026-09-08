@@ -3,6 +3,7 @@ import cors from 'cors';
 import itemRoutes from './routes/medicineRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import deliveryRoutes from './routes/deliveryRoutes.js';
+import saleRoutes from './routes/saleRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const app: Application = express();
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/item', itemRoutes);
 app.use('/api/branch', branchRoutes);
 app.use('/api/delivery', deliveryRoutes);
+app.use('/api/sale', saleRoutes);
 
 // Catch-all Global Error Handler
 app.use(errorHandler);

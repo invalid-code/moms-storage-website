@@ -24,6 +24,7 @@ export const getPaginatedMedicinesService = async (page: number, limit: number, 
     ...(item._id !== undefined ? { _id: item._id.toString() } : {}),
     name: item.name,
     count: item.count,
+    price: item.price,
   }));
   const totalItems = aggregationResult[0]?.metadata[0]?.totalItems || 0;
 
@@ -37,6 +38,7 @@ export const getMedicineService = async (id: ObjectId) => {
     ...(doc._id !== undefined ? { _id: doc._id.toString() } : {}),
     name: doc.name,
     count: doc.count,
+    price: doc.price,
   };
   return dto;
 };
