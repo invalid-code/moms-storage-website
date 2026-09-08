@@ -17,7 +17,11 @@ const route = useRoute();
 <template>
   <nav class="bg-[#363537] w-full h-12.5 flex items-center p-3.75">
     <h1 class="text-white text-[16px] font-[Roboto]">JRJ PHARMACY</h1>
-    <button class="ml-auto mr-3.25" @click="isPopupVisible = true">
+    <router-link to="/sales" class="ml-auto mr-3.25 text-white text-[14px] font-bold"
+      :class="{ 'underline': route.name === 'sales' || route.name === 'sale' }">
+      POS
+    </router-link>
+    <button class="mr-3.25" @click="isPopupVisible = true">
       <img class="h-5.25" :src="deliveryTruck" alt="navbar new delivery">
     </button>
     <img class="h-5.25" :src="bell" alt="navbar notifications">

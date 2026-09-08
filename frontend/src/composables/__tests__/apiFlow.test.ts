@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useDeliveries } from '@/composables/useDelivery';
 import { useMedicineRecords } from '@/composables/useMedicine';
+import { useSales } from '@/composables/useSale';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -111,5 +112,60 @@ describe('medicine API flow (composable -> service -> http -> fetch)', () => {
     expect(medicineRecords.value).toEqual([{ _id: 'm1', name: 'Paracetamol', count: 100, price: 25 }]);
     const [req] = fetchMock.mock.calls[0] as [Request];
     expect(req.url).toBe('https://api.test/item?page=1&limit=10&stockName=');
+  });
+});
+
+describe('sale API flow (composable -> service -> http -> fetch)', () => {
+  it('fetchSales populates state from the real HTTP path', async () => {
+    const payload = {
+      success: true,
+      data: [
+        {
+          _id: 's1',
+          branch: 'b1',
+          items: [{ stock_id: 'm1', quantity: 2, unitPrice: 25, stock_name: 'Paracetamol' }],
+          total: 50,
+          dateSold: '2026-02-01T00:00:00.000Z',
+          voided: false,
+        },
+      ],
+      pagination: {
+        totalItems: 1,
+        totalPages: 1,
+        currentPage: 1,
+        limit: 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    };
+    const fetchMock = okJson(payload);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { sales, pagination, error, fetchSales } = useSales();
+
+    await fetchSales(1, 10, 'b1');
+
+    expect(error.value).toBeNull();
+    expect(sales.value).toHaveLength(1);
+    expect(sales.value[0]?.total).toBe(50);
+    expect(pagination.value.totalItems).toBe(1);
+    const [req] = fetchMock.mock.calls[0] as [Request];
+    expect(req.url).toBe('https://api.test/sale?page=1&limit=10&branchId=b1');
+  });
+
+  it('createSale sends the sale DTO as JSON over POST', async () => {
+    const fetchMock = okJson({ success: true, data: null });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { createSale, error } = useSales();
+    const body = { branchId: 'b1', items: [{ stockId: 'm1', quantity: 2 }] };
+
+    await createSale(body);
+
+    expect(error.value).toBeNull();
+    const [req] = fetchMock.mock.calls[0] as [Request];
+    expect(req.method).toBe('POST');
+    expect(req.url).toBe('https://api.test/sale');
+    await expect(req.text()).resolves.toBe(JSON.stringify(body));
   });
 });

@@ -27,6 +27,16 @@ const routes = [
     name: 'delivery',
     component: () => import('../views/DeliveryView.vue')
   },
+  {
+    path: '/sales',
+    name: 'sales',
+    component: () => import('../views/SalesView.vue')
+  },
+  {
+    path: '/sale/:saleId',
+    name: 'sale',
+    component: () => import('../views/SaleView.vue')
+  },
 ]
 
 const router = createRouter({
