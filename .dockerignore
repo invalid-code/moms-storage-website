@@ -1,0 +1,15 @@
+# Keep the backend build context small and secret-free.
+node_modules
+dist
+coverage
+.git
+.vscode
+.idea
+frontend/node_modules
+frontend/dist
+backend/node_modules
+backend/dist
+backend/tests
+*.tsbuildinfo
+*.log
+.env

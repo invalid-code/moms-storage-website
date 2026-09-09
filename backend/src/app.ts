@@ -15,6 +15,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Liveness probe for container orchestration (no DB access).
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ success: true });
+});
+
 // Main App API Routes Mount
 app.use('/api/item', itemRoutes);
 app.use('/api/branch', branchRoutes);

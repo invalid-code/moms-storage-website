@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import BranchesDropdown from './BranchesDropdown.vue';
 import InteractiveTable from './InteractiveTable.vue';
 import { useSales } from '@/composables/useSale.ts';
 import { useBranches } from '@/composables/useBranch.ts';
 import { useMedicineRecords } from '@/composables/useMedicine.ts';
 import type { CreateSaleDTO } from '@my-app/types';
 
-defineProps({
+const props = defineProps({
   isOpen: {
     type: Boolean,
+    required: true
+  },
+  branchId: {
+    type: String,
     required: true
   }
 });
 const emit = defineEmits(['close', 'sold']);
 
-const curSelectedBranch = ref("");
 const quantities = ref<Record<string, number>>({});
 const tooLargeContent = ref(false);
 const curPage = ref(1);
@@ -31,13 +33,15 @@ const formatPrice = (value: number) =>
 const saleRows = computed(() => {
   return medicineRecords.value.map(medicineRecord => {
     const id = medicineRecord._id ?? "";
-    const availability = curSelectedBranch.value === ""
+    const availability = props.branchId === ""
       ? null
       : (branchStocks.value.find(branchStock => branchStock["stock-id"] === id)?.stock_onhold_amount ?? 0);
     return {
       id,
       name: medicineRecord.name,
-      price: medicineRecord.price,
+      // Legacy medicine docs may have no price yet; null renders as "-" and
+      // blocks the row from being sold (the backend rejects priceless items).
+      price: medicineRecord.price ?? null as number | null,
       availability,
       quantity: quantities.value[id] ?? 0,
     };
@@ -47,14 +51,14 @@ const saleRows = computed(() => {
 const translatedSaleRows = computed(() => {
   return {
     "Stock Name": saleRows.value.map(row => row.name),
-    Price: saleRows.value.map(row => formatPrice(row.price)),
+    Price: saleRows.value.map(row => row.price === null ? "-" : formatPrice(row.price)),
     Available: saleRows.value.map(row => row.availability === null ? "-" : row.availability),
     Quantity: saleRows.value.map(row => row.quantity),
   };
 });
 
 const saleTotal = computed(() =>
-  saleRows.value.reduce((sum, row) => sum + (quantities.value[row.id] ?? 0) * row.price, 0)
+  saleRows.value.reduce((sum, row) => sum + (quantities.value[row.id] ?? 0) * (row.price ?? 0), 0)
 );
 
 watch(translatedSaleRows, _ => {
@@ -65,13 +69,12 @@ watch(translatedSaleRows, _ => {
   }
 });
 
-const onBranchSelected = (branchId: string) => {
-  curSelectedBranch.value = branchId;
+watch(() => props.branchId, (newBranchId) => {
   quantities.value = {};
-  if (branchId !== "") {
-    fetchBranch(branchId, 1, 100, "", null);
+  if (newBranchId !== "") {
+    fetchBranch(newBranchId, 1, 100, "", null);
   }
-};
+});
 
 const setQuantity = (id: string, value: number) => {
   quantities.value[id] = Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
@@ -79,12 +82,12 @@ const setQuantity = (id: string, value: number) => {
 
 const handleConfirm = async () => {
   const items = saleRows.value
-    .filter(row => (quantities.value[row.id] ?? 0) > 0)
+    .filter(row => row.price !== null && (quantities.value[row.id] ?? 0) > 0)
     .map(row => ({ stockId: row.id, quantity: Math.trunc(quantities.value[row.id] ?? 0) }));
-  if (curSelectedBranch.value === "" || items.length === 0) return;
+  if (props.branchId === "" || items.length === 0) return;
 
   const data: CreateSaleDTO = {
-    branchId: curSelectedBranch.value,
+    branchId: props.branchId,
     items,
   };
   await createSale(data);
@@ -114,6 +117,9 @@ watch(curPage, async (newCurPage) => {
 onMounted(() => {
   fetchMedicineRecords(1, 10, "");
   curPage.value += 1;
+  if (props.branchId !== "") {
+    fetchBranch(props.branchId, 1, 100, "", null);
+  }
 });
 </script>
 
@@ -121,12 +127,12 @@ onMounted(() => {
   <div v-if="isOpen" class="fixed top-10 left-[30%] z-50 flex items-center justify-center p-4">
     <div class="rounded-xl bg-white p-6 w-150">
       <h2 class="text-[16px] font-bold mb-4">New Sale</h2>
-      <BranchesDropdown class="mb-5" @cur-selected="onBranchSelected" />
       <InteractiveTable v-show="!medicineLoading" class="auto-rows-[16.5%] h-60 mb-5" table-color="0CCE6B"
         :content="translatedSaleRows" :interactive-columns="['Quantity']" :-row-amt="5" @seen="handle"
         :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" :next-page-i="5">
         <template v-for="(row, i) in saleRows" #[`row-${i}`]>
           <input type="number" min="0" :max="row.availability ?? undefined" :value="row.quantity"
+            :disabled="row.price === null" title="No price set for this stock"
             @input="setQuantity(row.id, Number(($event.target as HTMLInputElement).value))" class="w-16 text-center" />
         </template>
       </InteractiveTable>
