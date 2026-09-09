@@ -16,6 +16,9 @@ RUN npm ci --workspace=backend && npm cache clean --force
 COPY backend ./backend
 COPY shared ./shared
 
+# Writable log directory for the non-root runtime user (see LOG_DIR).
+RUN mkdir -p /app/backend/logs && chown node:node /app/backend/logs
+
 WORKDIR /app/backend
 EXPOSE 5000
 USER node

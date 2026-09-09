@@ -1,5 +1,6 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import type { BranchDocument, DeliveryDocument, MedicineDocument, SaleDocument } from '../types/models.js';
+import { logger } from '../utils/logger.js';
 
 const uri = process.env.MONGO_DB_CONN_STR;
 if (!uri) {
@@ -17,7 +18,7 @@ export const client = new MongoClient(uri, {
 export const connectDB = async () => {
   try {
     await client.connect();
-    console.log("🍃 Connected to MongoDB successfully");
+    logger.info("Connected to MongoDB successfully");
   } catch (error) {
     throw new Error(`Couldn't connect to mongodb database: ${error}`);
   }

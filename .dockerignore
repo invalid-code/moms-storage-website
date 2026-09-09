@@ -12,4 +12,5 @@ backend/dist
 backend/tests
 *.tsbuildinfo
 *.log
+logs/
 .env

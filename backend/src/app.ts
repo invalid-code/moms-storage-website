@@ -5,6 +5,7 @@ import branchRoutes from './routes/branchRoutes.js';
 import deliveryRoutes from './routes/deliveryRoutes.js';
 import saleRoutes from './routes/saleRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { requestLogger } from './middlewares/requestLogger.js';
 
 const app: Application = express();
 
@@ -14,6 +15,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+app.use(requestLogger);
 
 // Liveness probe for container orchestration (no DB access).
 app.get('/api/health', (_req, res) => {
