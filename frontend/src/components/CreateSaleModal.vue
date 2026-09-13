@@ -4,7 +4,7 @@ import InteractiveTable from './InteractiveTable.vue';
 import { useSales } from '@/composables/useSale.ts';
 import { useBranches } from '@/composables/useBranch.ts';
 import { useMedicineRecords } from '@/composables/useMedicine.ts';
-import type { CreateSaleDTO } from '@my-app/types';
+import type { CreateSaleDTO, MedicineDTO } from '@my-app/types';
 
 const props = defineProps({
   isOpen: {
@@ -20,18 +20,63 @@ const emit = defineEmits(['close', 'sold']);
 
 const quantities = ref<Record<string, number>>({});
 const tooLargeContent = ref(false);
-const curPage = ref(1);
-let isFirst = true;
+
+// The medicines composable replaces its list on every fetch, so accumulate
+// pages locally instead. fetchedPages also guards the scroll observer, which
+// re-fires for row 0 on every re-render and would otherwise refetch endlessly.
+const allMedicines = ref<MedicineDTO[]>([]);
+const fetchedPages = ref<Set<number>>(new Set());
+const inFlightPages = new Set<number>();
+
+const resetMedicines = () => {
+  allMedicines.value = [];
+  fetchedPages.value = new Set();
+  inFlightPages.clear();
+};
 
 const { error: saleError, isLoading: saleLoading, createSale } = useSales();
-const { branchStocks, fetchBranch } = useBranches();
-const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineLoading, fetchMedicineRecords } = useMedicineRecords();
+const { branchStocks, error: branchError, fetchBranch } = useBranches();
+const { medicineRecords, pagination: medicineRecordsPagination, isLoading: medicineLoading, error: medicineError, fetchMedicineRecords } = useMedicineRecords();
 
 const formatPrice = (value: number) =>
   value.toLocaleString("en-PH", { style: "currency", currency: "PHP" });
 
+const loadMedicinePage = async (page: number) => {
+  if (page < 1 || fetchedPages.value.has(page) || inFlightPages.has(page)) return;
+  // currentPage === 0 means no fetch has completed yet, so allow page 1.
+  // After the first fetch this bound also stops the empty-catalogue case
+  // (totalPages === 0) from recursing forever.
+  const { totalPages, currentPage } = medicineRecordsPagination.value;
+  if (currentPage !== 0 && page > totalPages) return;
+  inFlightPages.add(page);
+  try {
+    await fetchMedicineRecords(page, 10, "");
+  } finally {
+    inFlightPages.delete(page);
+  }
+  if (medicineError.value !== null) {
+    return;
+  }
+  fetchedPages.value.add(page);
+  const knownIds = new Set(allMedicines.value.map(medicine => medicine._id));
+  for (const record of medicineRecords.value) {
+    if (!knownIds.has(record._id)) {
+      allMedicines.value.push(record);
+      knownIds.add(record._id);
+    }
+  }
+  if (medicineRecordsPagination.value.hasNextPage) {
+    await loadMedicinePage(page + 1);
+  }
+};
+
+const loadAllMedicines = () => {
+  resetMedicines();
+  void loadMedicinePage(1);
+};
+
 const saleRows = computed(() => {
-  return medicineRecords.value.map(medicineRecord => {
+  return allMedicines.value.map(medicineRecord => {
     const id = medicineRecord._id ?? "";
     const availability = props.branchId === ""
       ? null
@@ -61,13 +106,9 @@ const saleTotal = computed(() =>
   saleRows.value.reduce((sum, row) => sum + (quantities.value[row.id] ?? 0) * (row.price ?? 0), 0)
 );
 
-watch(translatedSaleRows, _ => {
-  if (isFirst && medicineRecordsPagination.value.totalItems > 10) {
-    tooLargeContent.value = true;
-    fetchMedicineRecords(curPage.value, 10, "");
-    isFirst = false;
-  }
-});
+watch(allMedicines, newAllMedicines => {
+  tooLargeContent.value = newAllMedicines.length > 5;
+}, { deep: true });
 
 watch(() => props.branchId, (newBranchId) => {
   quantities.value = {};
@@ -104,30 +145,40 @@ const handleClose = () => {
 };
 
 const handle = (_: string) => {
-  if (curPage.value <= medicineRecordsPagination.value.totalPages) {
-    curPage.value += 1;
-  }
+  // Eager loading above already fetches everything; this is only a safety net
+  // for retries / races. Find the smallest unfetched page instead of assuming
+  // contiguous pages (size + 1 breaks if a page failed and was retried).
+  let next = 1;
+  while (fetchedPages.value.has(next) || inFlightPages.has(next)) next += 1;
+  const { totalPages, currentPage } = medicineRecordsPagination.value;
+  if (currentPage !== 0 && next > totalPages) return;
+  void loadMedicinePage(next);
 };
 
-watch(curPage, async (newCurPage) => {
-  if (newCurPage < 3) return;
-  fetchMedicineRecords(newCurPage, 10, "");
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    loadAllMedicines();
+    if (props.branchId !== "") {
+      fetchBranch(props.branchId, 1, 100, "", null);
+    }
+  }
 });
 
 onMounted(() => {
-  fetchMedicineRecords(1, 10, "");
-  curPage.value += 1;
-  if (props.branchId !== "") {
+  if (props.isOpen) {
+    loadAllMedicines();
+  }
+  if (props.isOpen && props.branchId !== "") {
     fetchBranch(props.branchId, 1, 100, "", null);
   }
 });
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed top-10 left-[30%] z-50 flex items-center justify-center p-4">
-    <div class="rounded-xl bg-white p-6 w-150">
+  <div v-if="isOpen" class="fixed inset-x-0 top-10 z-50 flex items-center justify-center p-4">
+    <div class="rounded-xl bg-white p-6 w-[calc(100vw-2rem)] max-w-150">
       <h2 class="text-[16px] font-bold mb-4">New Sale</h2>
-      <InteractiveTable v-show="!medicineLoading" class="auto-rows-[16.5%] h-60 mb-5" table-color="0CCE6B"
+      <InteractiveTable v-show="!medicineLoading || allMedicines.length > 0" class="grid-cols-4 auto-rows-[16.5%] h-60 mb-5" table-color="#0CCE6B"
         :content="translatedSaleRows" :interactive-columns="['Quantity']" :-row-amt="5" @seen="handle"
         :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" :next-page-i="5">
         <template v-for="(row, i) in saleRows" #[`row-${i}`]>
@@ -138,7 +189,9 @@ onMounted(() => {
       </InteractiveTable>
       <div class="flex items-center mb-4">
         <p class="text-[14px] font-bold">Total: {{ formatPrice(saleTotal) }}</p>
-        <p v-if="saleError !== null" class="text-[12px] text-[#EF2D56] ml-4">{{ saleError }}</p>
+        <p v-if="medicineError !== null" class="text-[12px] text-[#EF2D56] ml-4">Stocks failed to load: {{ medicineError }}</p>
+        <p v-else-if="branchError !== null" class="text-[12px] text-[#EF2D56] ml-4">Availability failed to load: {{ branchError }}</p>
+        <p v-else-if="saleError !== null" class="text-[12px] text-[#EF2D56] ml-4">{{ saleError }}</p>
       </div>
       <button class="rounded-lg bg-[#DCED31] px-4 py-2 text-sm font-medium mr-5" @click="handleClose">
         Cancel
