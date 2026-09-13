@@ -6,6 +6,7 @@ import type { SaleDocument, SaleItem } from '../types/models.js';
 export interface SaleLineInput {
   stockId: ObjectId;
   quantity: number;
+  unitPrice?: number;
 }
 
 interface RawSaleItem {
@@ -108,14 +109,21 @@ export const createSaleService = async (branchId: ObjectId, lines: SaleLineInput
   const items: SaleItem[] = lines.map(line => {
     const medicine = medicineById.get(line.stockId.toString());
     if (!medicine) throw new Error('Medicine not found');
-    if (typeof medicine.price !== 'number' || !Number.isFinite(medicine.price)) {
+    // Per-item price override from the POS; falls back to the catalogue price.
+    // This also lets priceless legacy docs be sold once the cashier sets a price.
+    const override = line.unitPrice;
+    if (override !== undefined && (!Number.isFinite(override) || override < 0)) {
+      throw new Error(`Invalid price for medicine ${medicine.name}`);
+    }
+    const effectivePrice = override ?? medicine.price;
+    if (typeof effectivePrice !== 'number' || !Number.isFinite(effectivePrice)) {
       throw new Error(`Price not set for medicine ${medicine.name}`);
     }
     const branchStock = (branch.stocks ?? []).find(s => s.stock_id?.toString() === line.stockId.toString());
     const available = branchStock?.stock_onhold_amount ?? 0;
     if (available < line.quantity) throw new Error(`Insufficient stock for ${medicine.name}`);
     if (medicine.count < line.quantity) throw new Error(`Insufficient stock for ${medicine.name}`);
-    return { stock_id: line.stockId, quantity: line.quantity, unitPrice: medicine.price };
+    return { stock_id: line.stockId, quantity: line.quantity, unitPrice: effectivePrice };
   });
 
   const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);

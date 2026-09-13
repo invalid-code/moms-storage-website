@@ -8,6 +8,7 @@ export interface VoidSaleRouteParams { id: ID; }
 export interface CreateSaleItemDTO {
     stockId: ID;
     quantity: number;
+    unitPrice?: number;
 }
 
 export interface CreateSaleDTO {

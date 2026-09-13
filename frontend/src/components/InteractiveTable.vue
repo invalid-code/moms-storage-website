@@ -69,7 +69,8 @@ watch(targetIsVisible, (newTargetIsVisible) => {
           :class="{ 'bg-[#A3A1A52E]': curRow % 2 === 0, 'bg-white': !(curRow % 2 === 0), 'border-r': (i + 1) % columnAmt != 0 }"
           :style="{ '--tableColor': tableColor }" :ref="curRow % nextPageI == 0 ? everyFirstPage : undefined">
           <template v-if="interactiveColumns.includes(header)">
-            <slot :name="`row-${curRow}`"></slot>
+            <slot v-if="$slots[`row-${curRow}-${header}`]" :name="`row-${curRow}-${header}`"></slot>
+            <slot v-else :name="`row-${curRow}`"></slot>
           </template>
           <template v-else>
             {{ content[header][curRow] }}

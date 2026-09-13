@@ -18,7 +18,7 @@ const mapSaleError = (err: unknown, res: Response, next: NextFunction) => {
     if (/not found/i.test(err.message)) {
       return res.status(404).json({ success: false, message: err.message });
     }
-    if (/already voided|insufficient stock/i.test(err.message)) {
+    if (/already voided|insufficient stock|price not set|invalid price/i.test(err.message)) {
       return res.status(409).json({ success: false, message: err.message });
     }
   }
@@ -26,7 +26,10 @@ const mapSaleError = (err: unknown, res: Response, next: NextFunction) => {
 };
 
 const isValidSaleItem = (item: CreateSaleItemDTO) =>
-  ObjectId.isValid(item.stockId) && Number.isInteger(item.quantity) && item.quantity > 0;
+  ObjectId.isValid(item.stockId) &&
+  Number.isInteger(item.quantity) &&
+  item.quantity > 0 &&
+  (item.unitPrice === undefined || (typeof item.unitPrice === 'number' && Number.isFinite(item.unitPrice) && item.unitPrice >= 0));
 
 export const getSalesController = async (
   req: Request<{}, {}, {}, GetSalesRouteQueries>,
@@ -95,7 +98,7 @@ export const createSaleController = async (
 
     const data = await saleService.createSaleService(
       new ObjectId(branchId),
-      items.map(item => ({ stockId: new ObjectId(item.stockId), quantity: item.quantity })),
+      items.map(item => ({ stockId: new ObjectId(item.stockId), quantity: item.quantity, ...(item.unitPrice !== undefined ? { unitPrice: item.unitPrice } : {}) })),
     );
 
     res.status(201).json({ success: true, data });

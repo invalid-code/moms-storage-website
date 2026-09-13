@@ -19,6 +19,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'sold']);
 
 const quantities = ref<Record<string, number>>({});
+const prices = ref<Record<string, number>>({});
 const tooLargeContent = ref(false);
 
 // The medicines composable replaces its list on every fetch, so accumulate
@@ -81,12 +82,17 @@ const saleRows = computed(() => {
     const availability = props.branchId === ""
       ? null
       : (branchStocks.value.find(branchStock => branchStock["stock-id"] === id)?.stock_onhold_amount ?? 0);
+    const basePrice = medicineRecord.price ?? null as number | null;
+    const override = prices.value[id];
+    // User-set override wins; otherwise fall back to the catalogue price.
+    // Null means priceless (renders as "-" and blocks the row until set).
+    const price = override ?? basePrice;
     return {
       id,
       name: medicineRecord.name,
-      // Legacy medicine docs may have no price yet; null renders as "-" and
-      // blocks the row from being sold (the backend rejects priceless items).
-      price: medicineRecord.price ?? null as number | null,
+      basePrice,
+      price,
+      isOverridden: override !== undefined,
       availability,
       quantity: quantities.value[id] ?? 0,
     };
@@ -112,6 +118,7 @@ watch(allMedicines, newAllMedicines => {
 
 watch(() => props.branchId, (newBranchId) => {
   quantities.value = {};
+  prices.value = {};
   if (newBranchId !== "") {
     fetchBranch(newBranchId, 1, 100, "", null);
   }
@@ -121,10 +128,25 @@ const setQuantity = (id: string, value: number) => {
   quantities.value[id] = Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
 };
 
+const setPrice = (id: string, value: number) => {
+  // Empty / invalid / negative clears the override and falls back to catalogue.
+  if (!Number.isFinite(value) || value < 0) {
+    delete prices.value[id];
+    return;
+  }
+  prices.value[id] = Math.round(value * 100) / 100;
+};
+
 const handleConfirm = async () => {
   const items = saleRows.value
     .filter(row => row.price !== null && (quantities.value[row.id] ?? 0) > 0)
-    .map(row => ({ stockId: row.id, quantity: Math.trunc(quantities.value[row.id] ?? 0) }));
+    .map(row => ({
+      stockId: row.id,
+      quantity: Math.trunc(quantities.value[row.id] ?? 0),
+      // Only send an explicit price when the cashier overrode it; otherwise
+      // the backend falls back to the catalogue price.
+      ...(prices.value[row.id] !== undefined ? { unitPrice: prices.value[row.id] as number } : {}),
+    }));
   if (props.branchId === "" || items.length === 0) return;
 
   const data: CreateSaleDTO = {
@@ -135,12 +157,14 @@ const handleConfirm = async () => {
   if (saleError.value !== null) return;
 
   quantities.value = {};
+  prices.value = {};
   emit("sold");
   emit("close");
 };
 
 const handleClose = () => {
   quantities.value = {};
+  prices.value = {};
   emit("close");
 };
 
@@ -179,11 +203,17 @@ onMounted(() => {
     <div class="rounded-xl bg-white p-6 w-[calc(100vw-2rem)] max-w-150">
       <h2 class="text-[16px] font-bold mb-4">New Sale</h2>
       <InteractiveTable v-show="!medicineLoading || allMedicines.length > 0" class="grid-cols-4 auto-rows-[16.5%] h-60 mb-5" table-color="#0CCE6B"
-        :content="translatedSaleRows" :interactive-columns="['Quantity']" :-row-amt="5" @seen="handle"
+        :content="translatedSaleRows" :interactive-columns="['Price', 'Quantity']" :-row-amt="5" @seen="handle"
         :class="{ 'overflow-y-scroll': tooLargeContent, 'overflow-hidden': !tooLargeContent }" :next-page-i="5">
-        <template v-for="(row, i) in saleRows" #[`row-${i}`]>
+        <template v-for="(row, i) in saleRows" #[`row-${i}-Price`]>
+          <input type="number" min="0" step="0.01" :value="row.price ?? ''"
+            :placeholder="row.basePrice !== null ? String(row.basePrice) : 'Set price'"
+            title="Set price for this item"
+            @input="setPrice(row.id, Number(($event.target as HTMLInputElement).value))" class="w-20 text-center" />
+        </template>
+        <template v-for="(row, i) in saleRows" #[`row-${i}-Quantity`]>
           <input type="number" min="0" :max="row.availability ?? undefined" :value="row.quantity"
-            :disabled="row.price === null" title="No price set for this stock"
+            :disabled="row.price === null" title="Set a price before choosing quantity"
             @input="setQuantity(row.id, Number(($event.target as HTMLInputElement).value))" class="w-16 text-center" />
         </template>
       </InteractiveTable>
